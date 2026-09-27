@@ -1,13 +1,5 @@
 [
   {
-    "id": "aarti_evening",
-    "group": "General devotional",
-    "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
-    "music_track": "aarti_bells.mp3",
-    "duration": 25,
-    "selected_at": "2026-09-27T17:04:04"
-  },
-  {
     "id": "govardhan_leela",
     "group": "Krishna",
     "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
@@ -78,5 +70,13 @@
     "music_track": "flute_soft.mp3",
     "duration": 25,
     "selected_at": "2026-09-27T23:06:40"
+  },
+  {
+    "id": "jagannath_puri_temple",
+    "group": "Jagannath",
+    "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
+    "music_track": "aarti_bells.mp3",
+    "duration": 90,
+    "selected_at": "2026-09-27T23:45:17"
   }
 ]
