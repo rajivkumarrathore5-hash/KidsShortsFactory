@@ -1,0 +1,19 @@
+
+#to urn pipline
+python main.py --auto
+
+indicF5 servier start karne ke liye
+
+.\.venv\Scripts\python.exe -c "from pipeline.server_control import start_server; start_server()"
+
+python main.py
+
+#power shell ke liye prompt
+
+cd C:\Users\91757\Downloads\KidsShortsFactory
+.\.venv\Scripts\python.exe -c "from pipeline.server_control import start_server; start_server()"
+
+#fir ye chalo
+cd C:\Users\91757\Downloads\KidsShortsFactory
+.\.venv\Scripts\Activate.ps1
+python main.py

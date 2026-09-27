@@ -1,0 +1,20 @@
+# Secrets and environment variables
+.env
+secrets.py
+client_secret.json
+token.json
+config_state.json
+
+# Outputs and temp directories
+outputs/
+temp/
+scratch/
+.venv/
+kids_env/
+__pycache__/
+*.pyc
+*.tmp
+*.wav
+*.mp4
+*.mp3
+*.boundaries.json

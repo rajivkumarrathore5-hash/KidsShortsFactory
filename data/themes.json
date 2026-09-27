@@ -1,0 +1,572 @@
+[
+  {
+    "id": "radha_krishna_raas",
+    "character": "Radha and Krishna",
+    "theme": "Radha-Krishna romantic leela",
+    "mood": "romantic, divine, blissful",
+    "setting": "Vrindavan garden, moonlight, flowers",
+    "base_style": "Radha and Krishna, traditional Indian attire, warm golden lighting, devotional vertical artwork",
+    "keywords": [
+      "radha",
+      "krishna",
+      "raas",
+      "vrindavan",
+      "moonlight"
+    ],
+    "visual_style": "cinematic devotional art, soft moonlight",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "soft flute romantic devotional Indian classical gentle tabla",
+    "voice": "indicf5"
+  },
+  {
+    "id": "bal_krishna_makhan",
+    "character": "Bal Krishna",
+    "theme": "Bal Krishna and the butter pot",
+    "mood": "cute, playful, joyful",
+    "setting": "Gokul courtyard, butter pots, morning light",
+    "base_style": "child Krishna in traditional attire, joyful devotional scene, vertical artwork",
+    "keywords": [
+      "krishna",
+      "butter",
+      "matki",
+      "gokul",
+      "child"
+    ],
+    "visual_style": "colorful stylized 3D animation",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "playful joyful Indian flute upbeat tabla innocent kids devotional",
+    "voice": "indicf5"
+  },
+  {
+    "id": "krishna_flute_yamuna",
+    "character": "Krishna",
+    "theme": "Krishna's flute by the Yamuna",
+    "mood": "peaceful, enchanting, devotional",
+    "setting": "Yamuna riverbank, kadamba trees, twilight",
+    "base_style": "Krishna playing flute beside the Yamuna, traditional Indian devotional composition",
+    "keywords": [
+      "krishna",
+      "flute",
+      "yamuna",
+      "kadamba",
+      "twilight"
+    ],
+    "visual_style": "soft watercolor devotional illustration",
+    "music_track": "sitar_calm.mp3",
+    "music_prompt": "peaceful bamboo flute soothing sitar calm Yamuna river sound devotional",
+    "voice": "indicf5"
+  },
+  {
+    "id": "govardhan_leela",
+    "character": "Krishna",
+    "theme": "Govardhan protection leela",
+    "mood": "heroic, protective, wondrous",
+    "setting": "Govardhan hill, villagers, gentle rain",
+    "base_style": "Krishna protecting villagers beneath Govardhan hill, reverent Indian devotional art",
+    "keywords": [
+      "krishna",
+      "govardhan",
+      "hill",
+      "villagers",
+      "rain"
+    ],
+    "visual_style": "cinematic dramatic devotional painting",
+    "music_track": "dhol_energy.mp3",
+    "music_prompt": "heroic grand Indian classical dhol rhythmic majestic devotional flute",
+    "voice": "indicf5"
+  },
+  {
+    "id": "krishna_sudama_friendship",
+    "character": "Krishna and Sudama",
+    "theme": "Krishna and Sudama friendship",
+    "mood": "tender, humble, heartwarming",
+    "setting": "Dwarka palace courtyard, simple offering",
+    "base_style": "Krishna welcoming Sudama with humility and affection, devotional Indian art",
+    "keywords": [
+      "krishna",
+      "sudama",
+      "friendship",
+      "dwarka",
+      "welcome"
+    ],
+    "visual_style": "traditional miniature painting",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "tender emotional acoustic sitar soft flute heartwarming Indian classical",
+    "voice": "indicf5"
+  },
+  {
+    "id": "bal_hanuman_strength",
+    "character": "Bal Hanuman",
+    "theme": "Bal Hanuman discovers his strength",
+    "mood": "brave, uplifting, energetic",
+    "setting": "forest clearing, sunrise, mountain horizon",
+    "base_style": "young Hanuman with gada, reverent child-friendly devotional illustration",
+    "keywords": [
+      "hanuman",
+      "bal",
+      "strength",
+      "gada",
+      "sunrise"
+    ],
+    "visual_style": "stylized 3D animated devotional art",
+    "music_track": "dhol_energy.mp3",
+    "music_prompt": "energetic epic dhol nagada brave inspiring Indian devotional music",
+    "voice": "indicf5"
+  },
+  {
+    "id": "hanuman_bhakti",
+    "character": "Hanuman",
+    "theme": "Hanuman's unwavering bhakti",
+    "mood": "devoted, powerful, inspiring",
+    "setting": "temple courtyard, lamps, saffron flags",
+    "base_style": "Hanuman in a devotional temple setting, dignified and powerful, vertical Indian art",
+    "keywords": [
+      "hanuman",
+      "bhakti",
+      "temple",
+      "saffron",
+      "lamps"
+    ],
+    "visual_style": "hyperrealistic dramatic devotional lighting",
+    "music_track": "tabla_bhakti.mp3",
+    "music_prompt": "deep spiritual temple chimes rhythm tabla powerful devotional chant ambience",
+    "voice": "indicf5"
+  },
+  {
+    "id": "hanuman_sundarkand",
+    "character": "Hanuman",
+    "theme": "Hanuman's courage in Sundarkand",
+    "mood": "courageous, focused, triumphant",
+    "setting": "ocean crossing, distant Lanka, glowing horizon",
+    "base_style": "Hanuman courageously crossing the ocean, respectful epic devotional artwork",
+    "keywords": [
+      "hanuman",
+      "sundarkand",
+      "ocean",
+      "lanka",
+      "courage"
+    ],
+    "visual_style": "cinematic epic illustration",
+    "music_track": "dhol_energy.mp3",
+    "music_prompt": "courageous dramatic orchestral dhol energetic Indian epic theme",
+    "voice": "indicf5"
+  },
+  {
+    "id": "hanuman_ramnaam",
+    "character": "Hanuman",
+    "theme": "Hanuman remembers Ram naam",
+    "mood": "serene, faithful, comforting",
+    "setting": "quiet shrine, tulsi leaves, diya light",
+    "base_style": "Hanuman praying before a small shrine, peaceful devotional composition",
+    "keywords": [
+      "hanuman",
+      "ram naam",
+      "prayer",
+      "shrine",
+      "diya"
+    ],
+    "visual_style": "soft watercolor devotional art",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "serene peaceful temple bells gentle flute meditative sitar sound",
+    "voice": "indicf5"
+  },
+  {
+    "id": "ganesh_modak",
+    "character": "Bal Ganesh",
+    "theme": "Ganesh and the modak",
+    "mood": "cute, playful, cheerful",
+    "setting": "festive home, modak plate, flower garlands",
+    "base_style": "Bal Ganesh smiling beside modaks, warm child-friendly Indian devotional scene",
+    "keywords": [
+      "ganesh",
+      "modak",
+      "festival",
+      "flowers",
+      "cute"
+    ],
+    "visual_style": "colorful stylized 3D animation",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "cheerful festive brass bells happy tabla playful Indian kids song",
+    "voice": "indicf5"
+  },
+  {
+    "id": "ganesh_vinayak",
+    "character": "Ganesh",
+    "theme": "Vinayak blesses a new beginning",
+    "mood": "hopeful, bright, reassuring",
+    "setting": "home doorway, rangoli, morning sun",
+    "base_style": "Ganesh blessing a family at a decorated doorway, devotional vertical image",
+    "keywords": [
+      "ganesh",
+      "vinayak",
+      "blessing",
+      "rangoli",
+      "family"
+    ],
+    "visual_style": "traditional Indian folk painting",
+    "music_track": "tabla_bhakti.mp3",
+    "music_prompt": "bright uplifting shehnai traditional tabla sacred auspicious Indian classical",
+    "voice": "indicf5"
+  },
+  {
+    "id": "ganesh_mushak_friend",
+    "character": "Bal Ganesh",
+    "theme": "Ganesh and his mouse friend",
+    "mood": "gentle, funny, playful",
+    "setting": "garden path, flowers, little mouse",
+    "base_style": "Bal Ganesh sharing a sweet moment with Mushak, expressive devotional illustration",
+    "keywords": [
+      "ganesh",
+      "mushak",
+      "mouse",
+      "garden",
+      "friendship"
+    ],
+    "visual_style": "stylized 3D animated devotional art",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "gentle funny cute acoustic flute light percussion whimsical Indian theme",
+    "voice": "indicf5"
+  },
+  {
+    "id": "shiv_parvati_kailash",
+    "character": "Shiv and Parvati",
+    "theme": "Shiv-Parvati family on Kailash",
+    "mood": "calm, loving, divine",
+    "setting": "Kailash mountain, snowy peaks, family gathering",
+    "base_style": "Shiv and Parvati with their family on Kailash, respectful devotional artwork",
+    "keywords": [
+      "shiv",
+      "parvati",
+      "kailash",
+      "family",
+      "mountain"
+    ],
+    "visual_style": "cinematic Himalayan devotional art",
+    "music_track": "sitar_calm.mp3",
+    "music_prompt": "calm divine Himalayan sitar meditative flute ethereal ambient sounds",
+    "voice": "indicf5"
+  },
+  {
+    "id": "shiv_ganga",
+    "character": "Shiv Ji",
+    "theme": "Ganga flows from Shiv's jata",
+    "mood": "serene, sacred, meditative",
+    "setting": "Himalayas, flowing Ganga, dawn mist",
+    "base_style": "Shiva and the sacred Ganga in a tranquil Himalayan devotional scene",
+    "keywords": [
+      "shiv",
+      "ganga",
+      "jata",
+      "himalaya",
+      "river"
+    ],
+    "visual_style": "hyperrealistic soft dramatic lighting",
+    "music_track": "sitar_calm.mp3",
+    "music_prompt": "sacred tranquil river flowing sound sitar deep meditative Om ambient music",
+    "voice": "indicf5"
+  },
+  {
+    "id": "shiv_damru",
+    "character": "Shiv Ji",
+    "theme": "Shiv's damru and cosmic rhythm",
+    "mood": "powerful, rhythmic, awe-filled",
+    "setting": "Kailash, stars, cosmic light",
+    "base_style": "Shiva holding damru beneath a starry sky, dignified devotional vertical art",
+    "keywords": [
+      "shiv",
+      "damru",
+      "cosmic",
+      "stars",
+      "kailash"
+    ],
+    "visual_style": "cinematic cosmic devotional art",
+    "music_track": "dhol_energy.mp3",
+    "music_prompt": "powerful cosmic damru drum beat energetic cosmic rhythm shiva chant",
+    "voice": "indicf5"
+  },
+  {
+    "id": "durga_navratri",
+    "character": "Maa Durga",
+    "theme": "Durga's Navratri blessing",
+    "mood": "strong, radiant, protective",
+    "setting": "Navratri mandap, marigolds, glowing lamps",
+    "base_style": "Maa Durga in a festive Navratri setting, respectful and empowering Indian art",
+    "keywords": [
+      "durga",
+      "navratri",
+      "shakti",
+      "marigold",
+      "lamps"
+    ],
+    "visual_style": "traditional Madhubani-inspired art",
+    "music_track": "dhol_energy.mp3",
+    "music_prompt": "vibrant energetic Gujarati garba dholak festive Navratri rhythm",
+    "voice": "indicf5"
+  },
+  {
+    "id": "kali_compassion",
+    "character": "Maa Kali",
+    "theme": "Maa Kali's protective compassion",
+    "mood": "fierce, protective, compassionate",
+    "setting": "temple shrine, deep blue dusk, red hibiscus",
+    "base_style": "Maa Kali shown reverently as a compassionate protector, devotional artwork",
+    "keywords": [
+      "kali",
+      "protection",
+      "temple",
+      "hibiscus",
+      "shakti"
+    ],
+    "visual_style": "dramatic traditional devotional painting",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "intense powerful temple bell deep percussion sacred protective ambient",
+    "voice": "indicf5"
+  },
+  {
+    "id": "durga_lion",
+    "character": "Maa Durga",
+    "theme": "Durga rides with courage",
+    "mood": "brave, confident, uplifting",
+    "setting": "mountain path, lion, sunrise",
+    "base_style": "Maa Durga with her lion, empowering yet child-appropriate devotional art",
+    "keywords": [
+      "durga",
+      "lion",
+      "courage",
+      "mountains",
+      "sunrise"
+    ],
+    "visual_style": "cinematic 3D devotional illustration",
+    "music_track": "tabla_bhakti.mp3",
+    "music_prompt": "brave triumphant dhol brass horn heroic Indian classical march",
+    "voice": "indicf5"
+  },
+  {
+    "id": "lakshmi_diwali",
+    "character": "Maa Lakshmi",
+    "theme": "Lakshmi and Diwali lights",
+    "mood": "grateful, warm, prosperous",
+    "setting": "Diwali home, rangoli, rows of diyas",
+    "base_style": "Maa Lakshmi blessing a family among Diwali lamps, respectful devotional art",
+    "keywords": [
+      "lakshmi",
+      "diwali",
+      "diyas",
+      "rangoli",
+      "family"
+    ],
+    "visual_style": "warm cinematic devotional painting",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "prosperous warm Diwali temple bells gentle veena joyful festive ambient",
+    "voice": "indicf5"
+  },
+  {
+    "id": "lakshmi_lotus",
+    "character": "Maa Lakshmi",
+    "theme": "Lakshmi on the lotus",
+    "mood": "peaceful, abundant, gracious",
+    "setting": "lotus pond, golden dawn, soft reflections",
+    "base_style": "Maa Lakshmi seated on a lotus, serene and graceful Indian devotional composition",
+    "keywords": [
+      "lakshmi",
+      "lotus",
+      "dawn",
+      "blessing",
+      "gold"
+    ],
+    "visual_style": "traditional miniature painting",
+    "music_track": "sitar_calm.mp3",
+    "music_prompt": "peaceful graceful veena soft sitar golden dawn serene Indian music",
+    "voice": "indicf5"
+  },
+  {
+    "id": "ram_sita_ayodhya",
+    "character": "Ram and Sita",
+    "theme": "Ram-Sita return to Ayodhya",
+    "mood": "joyful, welcoming, devotional",
+    "setting": "Ayodhya streets, lamps, flower petals",
+    "base_style": "Ram and Sita welcomed in Ayodhya, respectful Ramayan-inspired devotional scene",
+    "keywords": [
+      "ram",
+      "sita",
+      "ayodhya",
+      "welcome",
+      "lamps"
+    ],
+    "visual_style": "cinematic epic devotional art",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "joyful grand celebration shehnai temple bells festive Ayodhya anthem",
+    "voice": "indicf5"
+  },
+  {
+    "id": "ram_sita_vanvaas",
+    "character": "Ram and Sita",
+    "theme": "Ram-Sita kindness in the forest",
+    "mood": "gentle, devoted, peaceful",
+    "setting": "forest hut, river, flowering trees",
+    "base_style": "Ram and Sita sharing a peaceful forest moment, respectful traditional Indian art",
+    "keywords": [
+      "ram",
+      "sita",
+      "forest",
+      "river",
+      "kindness"
+    ],
+    "visual_style": "soft watercolor devotional illustration",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "gentle soothing forest acoustic flute birds sitar calm devotional tune",
+    "voice": "indicf5"
+  },
+  {
+    "id": "ram_hanuman_meet",
+    "character": "Ram and Hanuman",
+    "theme": "Ram meets Hanuman",
+    "mood": "humble, devoted, inspiring",
+    "setting": "forest clearing, folded hands, warm light",
+    "base_style": "Ram and Hanuman meeting with humility and devotion, reverent Ramayan artwork",
+    "keywords": [
+      "ram",
+      "hanuman",
+      "meeting",
+      "devotion",
+      "forest"
+    ],
+    "visual_style": "traditional Indian painting",
+    "music_track": "tabla_bhakti.mp3",
+    "music_prompt": "humble reverent sitar soft tabla emotional reunion devotional theme",
+    "voice": "indicf5"
+  },
+  {
+    "id": "jagannath_rath_yatra",
+    "character": "Lord Jagannath, Balabhadra and Subhadra",
+    "theme": "Jagannath Rath Yatra",
+    "mood": "festive, communal, joyful",
+    "setting": "Puri street, decorated chariots, flower offerings",
+    "base_style": "Jagannath, Balabhadra and Subhadra on decorated Rath Yatra chariots, respectful art",
+    "keywords": [
+      "jagannath",
+      "puri",
+      "rath yatra",
+      "chariot",
+      "festival"
+    ],
+    "visual_style": "vibrant traditional Pattachitra-inspired painting",
+    "music_track": "dhol_energy.mp3",
+    "music_prompt": "festive rhythmic Puri ghanta dholak energetic communal celebration",
+    "voice": "indicf5"
+  },
+  {
+    "id": "jagannath_puri_temple",
+    "character": "Lord Jagannath",
+    "theme": "Peaceful morning at Puri temple",
+    "mood": "peaceful, reverent, sacred",
+    "setting": "Puri temple courtyard, sunrise, flags",
+    "base_style": "Puri temple at sunrise with reverent Jagannath devotional imagery",
+    "keywords": [
+      "jagannath",
+      "puri temple",
+      "sunrise",
+      "flags",
+      "darshan"
+    ],
+    "visual_style": "traditional Pattachitra-inspired art",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "sacred morning temple bells sea breeze soft sitar devotional bhajan",
+    "voice": "indicf5"
+  },
+  {
+    "id": "jagannath_sibling_bond",
+    "character": "Jagannath, Balabhadra and Subhadra",
+    "theme": "Jagannath and the sibling bond",
+    "mood": "loving, gentle, celebratory",
+    "setting": "temple courtyard, flowers, festive colors",
+    "base_style": "Jagannath with Balabhadra and Subhadra, sibling warmth, respectful devotional art",
+    "keywords": [
+      "jagannath",
+      "balabhadra",
+      "subhadra",
+      "siblings",
+      "flowers"
+    ],
+    "visual_style": "colorful stylized 3D devotional art",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "loving joyful light flute folk percussion cheerful Indian melody",
+    "voice": "indicf5"
+  },
+  {
+    "id": "aarti_evening",
+    "character": "Devotees",
+    "theme": "Evening aarti together",
+    "mood": "warm, devotional, peaceful",
+    "setting": "temple hall, brass lamps, gathered devotees",
+    "base_style": "devotees performing evening aarti with glowing brass lamps, reverent Indian scene",
+    "keywords": [
+      "aarti",
+      "temple",
+      "brass lamp",
+      "devotees",
+      "evening"
+    ],
+    "visual_style": "cinematic warm devotional photography",
+    "music_track": "aarti_bells.mp3",
+    "music_prompt": "warm glowing evening temple aarti bells shankh conch devotional chorus",
+    "voice": "indicf5"
+  },
+  {
+    "id": "mandir_morning",
+    "character": "Devotees",
+    "theme": "Morning mandir darshan",
+    "mood": "hopeful, calm, sacred",
+    "setting": "temple steps, dawn, flower offerings",
+    "base_style": "peaceful Indian mandir at dawn with flower offerings and respectful devotees",
+    "keywords": [
+      "mandir",
+      "darshan",
+      "dawn",
+      "flowers",
+      "temple"
+    ],
+    "visual_style": "hyperrealistic natural devotional lighting",
+    "music_track": "sitar_calm.mp3",
+    "music_prompt": "hopeful calm morning mandir sitar tanpura soothing devotional music",
+    "voice": "indicf5"
+  },
+  {
+    "id": "diya_prayer",
+    "character": "A praying child",
+    "theme": "A child lights a diya",
+    "mood": "gentle, hopeful, tender",
+    "setting": "home shrine, small diya, marigold petals",
+    "base_style": "child lighting a diya at a home shrine, safe and respectful devotional scene",
+    "keywords": [
+      "diya",
+      "child",
+      "prayer",
+      "home shrine",
+      "marigold"
+    ],
+    "visual_style": "soft watercolor illustration",
+    "music_track": "flute_soft.mp3",
+    "music_prompt": "tender gentle soft acoustic flute child prayer warm ambient",
+    "voice": "indicf5"
+  },
+  {
+    "id": "bhajan_family",
+    "character": "A devotional family",
+    "theme": "Family sings a bhajan",
+    "mood": "joyful, connected, peaceful",
+    "setting": "family room, harmonium, warm evening lamps",
+    "base_style": "Indian family singing a devotional bhajan together, warm respectful artwork",
+    "keywords": [
+      "bhajan",
+      "family",
+      "harmonium",
+      "singing",
+      "lamps"
+    ],
+    "visual_style": "cinematic 3D family devotional art",
+    "music_track": "tabla_bhakti.mp3",
+    "music_prompt": "joyful acoustic harmonium tabla family singing warm bhajan music",
+    "voice": "indicf5"
+  }
+]

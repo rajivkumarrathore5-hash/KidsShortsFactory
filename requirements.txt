@@ -1,0 +1,13 @@
+google-genai
+google-api-python-client
+google-auth-oauthlib
+groq
+edge-tts
+text-unidecode>=1.3
+# MoviePy is omitted: FFmpeg renders directly, and MoviePy 2.2.1 conflicts with Instagrapi's Pillow requirement.
+opencv-python-headless
+requests
+python-dotenv
+schedule
+instagrapi>=2.18.18
+playwright

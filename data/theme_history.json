@@ -1,0 +1,82 @@
+[
+  {
+    "id": "durga_lion",
+    "group": "Durga-Kali",
+    "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
+    "music_track": "tabla_bhakti.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T12:22:46"
+  },
+  {
+    "id": "radha_krishna_raas",
+    "group": "Krishna",
+    "visual_style": "hyperrealistic devotional art, dramatic lighting, detailed vertical composition",
+    "music_track": "flute_soft.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T12:48:48"
+  },
+  {
+    "id": "lakshmi_diwali",
+    "group": "Lakshmi",
+    "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
+    "music_track": "aarti_bells.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T12:52:22"
+  },
+  {
+    "id": "jagannath_rath_yatra",
+    "group": "Jagannath",
+    "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
+    "music_track": "dhol_energy.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T16:07:25"
+  },
+  {
+    "id": "shiv_ganga",
+    "group": "Shiv-Parvati",
+    "visual_style": "stylized 3D animated family-film look, expressive faces, colorful vertical composition",
+    "music_track": "sitar_calm.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T16:16:01"
+  },
+  {
+    "id": "ram_hanuman_meet",
+    "group": "Hanuman",
+    "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
+    "music_track": "tabla_bhakti.mp3",
+    "duration": 25,
+    "selected_at": "2026-09-27T16:29:02"
+  },
+  {
+    "id": "ram_sita_vanvaas",
+    "group": "Ram-Sita",
+    "visual_style": "hyperrealistic devotional art, dramatic lighting, detailed vertical composition",
+    "music_track": "flute_soft.mp3",
+    "duration": 25,
+    "selected_at": "2026-09-27T16:59:48"
+  },
+  {
+    "id": "aarti_evening",
+    "group": "General devotional",
+    "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
+    "music_track": "aarti_bells.mp3",
+    "duration": 25,
+    "selected_at": "2026-09-27T17:04:04"
+  },
+  {
+    "id": "govardhan_leela",
+    "group": "Krishna",
+    "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
+    "music_track": "dhol_energy.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T18:19:28"
+  },
+  {
+    "id": "lakshmi_lotus",
+    "group": "Lakshmi",
+    "visual_style": "stylized 3D animated family-film look, expressive faces, colorful vertical composition",
+    "music_track": "sitar_calm.mp3",
+    "duration": 20,
+    "selected_at": "2026-09-27T18:26:47"
+  }
+]
