@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import re
 import subprocess
 import tempfile
@@ -455,37 +456,59 @@ def render_video(
         audio_index = len(clip_paths)
         cmd.extend(["-i", audio_path])
 
-        # FIX 2: Dynamic music generation via Pollinations API (with static fallback)
+        # FIX 1 & FIX 2: Random music file selection & random start offset
         selected_music_file = None
         use_music = False
-        if background_music:
-            try:
-                from pipeline.ai_music import generate_ai_music
-                temp_music_dest = temp_path / "temp_music.mp3"
-                music_prompt_text = music_prompt or "soft flute romantic devotional Indian classical gentle tabla"
-                ai_track = generate_ai_music(
-                    music_prompt_text,
-                    temp_music_dest,
-                    duration=max(15, round(final_video_duration)),
-                )
-                if ai_track and Path(ai_track).is_file():
-                    selected_music_file = Path(ai_track)
-                    use_music = True
-            except Exception as music_err:
-                print(f"[WARNING] Dynamic music generation failed: {music_err}")
+        music_offset = 0.0
 
-            if not use_music and music_path:
+        if background_music:
+            project_root = Path(__file__).resolve().parents[1]
+            search_dirs = [
+                project_root / "assets" / "music",
+                project_root / "data" / "music",
+                Path("assets/music"),
+                Path("data/music"),
+            ]
+            music_files = []
+            for search_dir in search_dirs:
+                if search_dir.is_dir():
+                    for mp3 in search_dir.glob("*.mp3"):
+                        if mp3.is_file() and mp3 not in music_files:
+                            music_files.append(mp3)
+
+            if music_files:
+                selected_music_file = random.choice(music_files)
+                use_music = True
+                print(f"[MUSIC] Randomly selected: {selected_music_file.name}")
+            elif music_path:
                 fallback_path = Path(music_path)
                 if not fallback_path.is_absolute():
-                    fallback_path = Path(__file__).resolve().parents[1] / fallback_path
+                    fallback_path = project_root / fallback_path
                 if fallback_path.is_file():
                     selected_music_file = fallback_path
                     use_music = True
+                    print(f"[MUSIC] Randomly selected: {selected_music_file.name}")
+
+            if use_music and selected_music_file:
+                try:
+                    duration = _get_audio_duration(str(selected_music_file))
+                    max_offset = duration - final_video_duration - 5.0
+                    if max_offset > 0:
+                        music_offset = round(random.uniform(0, max_offset), 2)
+                    else:
+                        music_offset = 0.0
+                    print(f"[MUSIC] Playing from offset: {music_offset}s (file duration: {duration}s)")
+                except Exception as offset_err:
+                    music_offset = 0.0
+                    print(f"[WARNING] Music offset calculation failed ({offset_err}), defaulting to 0s")
 
         music_index = None
         if use_music and selected_music_file:
             music_index = audio_index + 1
-            cmd.extend(["-stream_loop", "-1", "-i", str(selected_music_file)])
+            if music_offset > 0:
+                cmd.extend(["-ss", f"{music_offset}", "-stream_loop", "-1", "-i", str(selected_music_file)])
+            else:
+                cmd.extend(["-stream_loop", "-1", "-i", str(selected_music_file)])
 
         filters = []
         if len(rendered_clips) == 1:
@@ -513,6 +536,16 @@ def render_video(
             filters.append(f"{scene_labels}concat=n={len(rendered_clips)}:v=1:a=0[background]")
 
         current_label = "background"
+        b_pct = int(effects.get("brightness", 0)) if effects else 0
+        c_pct = int(effects.get("contrast", 0)) if effects else 0
+        print(f"[INFO] Brightness: {b_pct}% | Contrast: {c_pct}%")
+
+        if b_pct != 0 or c_pct != 0:
+            b_val = b_pct / 100.0
+            c_val = 1.0 + (c_pct / 100.0)
+            filters.append(f"[{current_label}]eq=brightness={b_val:.2f}:contrast={c_val:.2f}[eq_adjusted]")
+            current_label = "eq_adjusted"
+
         COLOR_FILTER_MAP = {
             "none": "",
             "warm": "colorbalance=rs=0.1:gs=0.05:bs=-0.05",
@@ -528,6 +561,7 @@ def render_video(
         if vignette_opt:
             filters.append(f"[{current_label}]vignette=PI/4[vignetted]")
             current_label = "vignetted"
+
 
         for index, (segment, _) in enumerate(zip(segments, caption_paths)):
             next_label = f"captioned{index}"
@@ -643,10 +677,10 @@ def render_video(
         else:
             audio_filters.append(f"[{audio_index}:a]anull[{voice_label}]")
         if use_music:
-            raw_vol = float(music_volume) if music_volume is not None else 0.80
-            # Boost the music stream before mixing (e.g. 1.2 or scaled with music_volume)
-            effective_music_vol = max(1.20, round(raw_vol * 1.5, 2))
-            audio_filters.append(f"[{music_index}:a]volume={effective_music_vol:.2f}[music]")
+            raw_vol = float(music_volume) if music_volume is not None else 1.0
+            final_volume = round(max(1.50, raw_vol * 1.5), 2)
+            print(f"[DEBUG] Music volume applied: {final_volume}")
+            audio_filters.append(f"[{music_index}:a]volume={final_volume:.2f}[music]")
             audio_filters.append(
                 f"[{voice_label}][music]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[mixed]"
             )

@@ -80,8 +80,9 @@ OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 APPROVAL_PROMPT = (
-    "Kya yeh video sahi hai? [y] Accept / [n] Reject & Regenerate / [q] Quit"
+    "Kya yeh video sahi hai? [y] Accept / [u] Upload Now / [n] Reject & Regenerate / [q] Quit"
 )
+
 
 
 def _default_settings():
@@ -124,7 +125,10 @@ def _default_settings():
         "channel_name": CHANNEL_NAME,
         "cleanup_temp_files": CLEANUP_TEMP_FILES,
         "caption_style": "bottom_bold",
+        "brightness": 0,
+        "contrast": 0,
     }
+
 
 
 def _merge_settings(runtime_overrides):
@@ -188,6 +192,26 @@ def _determine_voice_for_theme(theme_config):
     return voice
 
 
+def calculate_scene_count(duration: int) -> int:
+    duration = int(duration)
+    if duration <= 20:
+        return 3
+    elif duration <= 30:
+        return 4
+    elif duration <= 45:
+        return 5
+    elif duration <= 60:
+        return 6
+    elif duration <= 90:
+        return 8
+    elif duration <= 120:
+        return 10
+    elif duration <= 150:
+        return 12
+    else:
+        return 15
+
+
 def _select_dynamic_job(settings, character_override=None, duration_override=None):
     if duration_override is not None:
         duration = int(duration_override)
@@ -218,7 +242,8 @@ def _select_dynamic_job(settings, character_override=None, duration_override=Non
     if not theme_config:
         raise ValueError("Theme selection returned None configuration.")
 
-    scene_count = 3 if duration <= 15 else 4 if duration <= 20 else 5
+    scene_count = calculate_scene_count(duration)
+
     image_seed = random.randint(0, 2**31 - 1) if AI_IMAGE_SEED_PER_VIDEO else None
     indicf5_speed = INDICF5_SPEED
     settings.update(
@@ -471,18 +496,25 @@ def _remove_artifacts(*paths):
             os.remove(path)
 
 
-def _accept_video(script, video_path):
-    if not ENABLE_UPLOAD:
+def _accept_video(script, video_path, enable_upload_override=False, settings=None):
+    upload_enabled = enable_upload_override or ENABLE_UPLOAD
+    if not upload_enabled:
         print(f"[SKIP] Upload disabled. Video saved at: {video_path}")
         return video_path
 
     narration_text = spoken_text(script)
-    first_line = next((line.strip() for line in narration_text.splitlines() if line.strip()), "Kids Short")
-    title = f"{first_line[:90]} #Shorts"[:100]
-    description = f"{narration_text}\n\n#Shorts #Kids #HindiStory"
+    metadata_info = get_script_metadata(script)
+    theme_val = metadata_info.get("theme") or (settings.get("theme") if settings else None)
+    char_val = metadata_info.get("character") or (settings.get("character") if settings else None)
+
     from uploaders.factory import upload_to_platforms
 
-    return upload_to_platforms(video_path, title, description, script=narration_text)
+    return upload_to_platforms(
+        video_path,
+        script=narration_text,
+        theme=theme_val,
+        character=char_val,
+    )
 
 
 def create_and_upload(
@@ -492,6 +524,7 @@ def create_and_upload(
     character_override=None,
     duration_override=None,
     no_menu=False,
+    enable_upload_override=False,
 ):
     if RANDOM_EFFECTS:
         effects = pick_random_effects()
@@ -539,6 +572,20 @@ def create_and_upload(
         if "caption_style" in saved_state:
             settings["caption_style"] = str(saved_state["caption_style"])
             print(f"[INFO] Caption Style: {settings['caption_style']} (from saved state)")
+        if "brightness" in saved_state:
+            try:
+                b_val = int(saved_state["brightness"])
+                settings["brightness"] = b_val
+                print(f"[INFO] Brightness: {b_val}% (from saved state)")
+            except (ValueError, TypeError):
+                pass
+        if "contrast" in saved_state:
+            try:
+                c_val = int(saved_state["contrast"])
+                settings["contrast"] = c_val
+                print(f"[INFO] Contrast: {c_val}% (from saved state)")
+            except (ValueError, TypeError):
+                pass
 
     # Force TTS provider to indicf5
     settings["tts_provider"] = "indicf5"
@@ -557,13 +604,18 @@ def create_and_upload(
         settings["duration"] = int(duration_override)
         print(f"[INFO] Duration CLI override: {settings['duration_target']} sec")
 
-    # Show menu unless --auto or --no-menu flag is passed
-    if auto_accept or no_menu:
+    # Show menu unless --no-menu flag is passed (FIX 1)
+    if no_menu:
         save_config_state(settings)
     else:
         settings = show_settings_menu(settings)
 
+    effects["brightness"] = settings.get("brightness", 0)
+    effects["contrast"] = settings.get("contrast", 0)
+    settings["effects"] = effects
+
     settings = _merge_settings(settings)
+
 
     # Always pick a dynamic theme on every run
     theme_config = _select_dynamic_job(
@@ -583,13 +635,20 @@ def create_and_upload(
         print(f"\nGenerating video... {datetime.now()}")
         audio_path, boundaries_path, video_path, video_info = _render_video(script, settings)
         if auto_accept:
-            return _accept_video(script, video_path)
+            return _accept_video(script, video_path, enable_upload_override=enable_upload_override, settings=settings)
 
         _print_video_summary(script, settings, video_path, video_info)
         while True:
             choice = input(f"{APPROVAL_PROMPT}\n> ").strip().lower()
             if choice == "y":
-                return _accept_video(script, video_path)
+                return _accept_video(script, video_path, enable_upload_override=enable_upload_override, settings=settings)
+            if choice == "u":
+                print("[UPLOAD] User chose [u] Upload Now")
+                try:
+                    return _accept_video(script, video_path, enable_upload_override=True, settings=settings)
+                except Exception as upload_err:
+                    print(f"[ERROR] Upload failed: {upload_err}. Video preserved at: {video_path}")
+                    return video_path
             if choice == "q":
                 print(f"[QUIT] Approval stopped. Video remains at: {video_path}")
                 return None
@@ -606,7 +665,8 @@ def create_and_upload(
                 settings["tts_voice"] = selected_voice
                 script = _generate_script(settings)
                 break
-            print("Please enter y, n, or q.")
+            print("Please enter y, u, n, or q.")
+
 
 
 def main(argv=None):
@@ -642,17 +702,41 @@ def main(argv=None):
         "--duration",
         type=int,
         default=None,
-        help="Force video duration in seconds (12-25)",
+        help="Force video duration in seconds (15-180)",
+    )
+
+    parser.add_argument(
+        "--upload",
+        action="store_true",
+        help="Enable YouTube upload for this run (overrides ENABLE_UPLOAD)",
+    )
+    parser.add_argument(
+        "--batch",
+        type=int,
+        default=1,
+        help="Run the pipeline N times in batch mode",
     )
     args = parser.parse_args(argv)
-    return create_and_upload(
-        auto_accept=args.auto,
-        cli_ratio=args.ratio,
-        reset_ratio=args.reset_ratio,
-        character_override=args.character,
-        duration_override=args.duration,
-        no_menu=args.no_menu,
-    )
+
+    batch_count = max(1, args.batch)
+    results = []
+    for run_idx in range(batch_count):
+        if batch_count > 1:
+            print(f"\n==========================================")
+            print(f"   BATCH RUN {run_idx + 1} OF {batch_count}")
+            print(f"==========================================")
+        res = create_and_upload(
+            auto_accept=args.auto,
+            cli_ratio=args.ratio,
+            reset_ratio=args.reset_ratio,
+            character_override=args.character,
+            duration_override=args.duration,
+            no_menu=args.no_menu,
+            enable_upload_override=args.upload,
+        )
+        results.append(res)
+    return results[0] if len(results) == 1 else results
+
 
 if __name__ == "__main__":
     main()

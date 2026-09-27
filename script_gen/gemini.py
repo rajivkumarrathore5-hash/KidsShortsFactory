@@ -127,3 +127,18 @@ def generate_script(character=None, theme=None, duration=15, theme_config=None, 
         theme_config=theme_config,
         scene_count=scene_count,
     )
+
+
+def generate_youtube_title(script_text, theme=None):
+    from uploaders.metadata import generate_youtube_title as gen_title
+    return gen_title(script_text, theme=theme)
+
+
+def generate_youtube_description(script_text, theme=None):
+    from uploaders.metadata import generate_youtube_description as gen_desc
+    return gen_desc(script_text, theme=theme)
+
+
+def generate_youtube_tags(script_text, theme=None):
+    from uploaders.metadata import generate_youtube_tags as gen_tags
+    return gen_tags(script_text, theme=theme)

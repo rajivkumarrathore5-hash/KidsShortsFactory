@@ -60,7 +60,7 @@ INDICF5_SERVER_PYTHON = os.getenv(
 )
 CHARACTER = os.getenv("CHARACTER", "Krishna")
 THEME = os.getenv("THEME", "Devotion")
-DURATION_TARGET = int(os.getenv("DURATION_TARGET", "15"))
+DURATION_TARGET = int(os.getenv("DURATION_TARGET", "20"))
 CAPTION_MODE = os.getenv("CAPTION_MODE", "line_by_line").strip().lower()
 FONT_PATH = os.getenv("FONT_PATH", "assets/fonts/NotoSansDevanagari-Regular.ttf")
 CAPTION_FONT_SIZE = int(os.getenv("CAPTION_FONT_SIZE", "48"))
@@ -79,8 +79,9 @@ MUSIC_VOLUME = float(os.getenv("MUSIC_VOLUME", "0.15"))
 INTRO_ENABLED = os.getenv("INTRO_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 OUTRO_ENABLED = os.getenv("OUTRO_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 CHANNEL_NAME = os.getenv("CHANNEL_NAME", "Kids Shorts Factory")
-MIN_DURATION = int(os.getenv("MIN_DURATION", "12"))
-MAX_DURATION = int(os.getenv("MAX_DURATION", "25"))
+MIN_DURATION = int(os.getenv("MIN_DURATION", "15"))
+MAX_DURATION = int(os.getenv("MAX_DURATION", "180"))
+
 VISUAL_SOURCE = os.getenv("VISUAL_SOURCE", "ai").strip().lower()
 IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "agnes").strip().lower()
 AI_IMAGE_PROVIDER = IMAGE_PROVIDER
@@ -130,15 +131,20 @@ RENDER_ENGINE = "simple"
 YOUTUBE_PROVIDER = "api"
 FACEBOOK_PROVIDER = "selenium"
 INSTAGRAM_PROVIDER = "instagrapi"
+MADE_FOR_KIDS = os.getenv("MADE_FOR_KIDS", "false").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 # ------ VIDEO SETTINGS ------
 SHORT_DURATION = DURATION_TARGET
 
 # ------ SCHEDULING ------
-UPLOAD_INTERVAL_HOURS = 9
+SCHEDULE_INTERVAL_HOURS = int(get_secret("SCHEDULE_INTERVAL_HOURS", "9"))
+UPLOAD_INTERVAL_HOURS = SCHEDULE_INTERVAL_HOURS
 
 # ------ FALLBACK STRATEGY ------
 FALLBACK_ENABLED = True
+
 
 # ================================================================
 #  PRINT CONFIGURATION

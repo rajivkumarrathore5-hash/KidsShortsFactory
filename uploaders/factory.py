@@ -1,6 +1,6 @@
 from config import PLATFORMS, YOUTUBE_PROVIDER, FACEBOOK_PROVIDER, INSTAGRAM_PROVIDER
 
-def upload_to_platforms(video_path, title, description, script=None):
+def upload_to_platforms(video_path, title=None, description=None, script=None, theme=None, character=None):
     results = {}
     if "youtube" in PLATFORMS:
         if YOUTUBE_PROVIDER == "api":
@@ -8,7 +8,9 @@ def upload_to_platforms(video_path, title, description, script=None):
         else:
             from .youtube import internal_uploader as yt
         if YOUTUBE_PROVIDER == "api":
-            results['youtube'] = yt.upload(video_path, title, description, script=script)
+            results['youtube'] = yt.upload(
+                video_path, title=title, description=description, script=script, theme=theme, character=character
+            )
         else:
             results['youtube'] = yt.upload(video_path, title, description)
     if "facebook" in PLATFORMS:

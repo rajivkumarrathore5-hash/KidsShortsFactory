@@ -17,3 +17,5 @@ cd C:\Users\91757\Downloads\KidsShortsFactory
 cd C:\Users\91757\Downloads\KidsShortsFactory
 .\.venv\Scripts\Activate.ps1
 python main.py
+
+python main.py --auto --upload

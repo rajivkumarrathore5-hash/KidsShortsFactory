@@ -181,8 +181,9 @@ def parse_structured_script(
         raise ValueError("Structured script must be a JSON object with a scenes array.")
     if expected_scene_count is not None and len(data["scenes"]) != expected_scene_count:
         raise ValueError(f"Structured script must contain exactly {expected_scene_count} scenes.")
-    if not 3 <= len(data["scenes"]) <= 5:
-        raise ValueError("Structured script must contain 3 to 5 scenes.")
+    if not 3 <= len(data["scenes"]) <= 15:
+        raise ValueError("Structured script must contain 3 to 15 scenes.")
+
 
     expected_name = _canonical_character(expected_character).removeprefix("Bal ") if expected_character else None
     character = data.get("character")
