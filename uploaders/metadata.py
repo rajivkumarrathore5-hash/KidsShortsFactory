@@ -136,9 +136,10 @@ def validate_and_format_title(raw_title: str, character: str = None) -> str:
     return title
 
 
-def generate_youtube_metadata(script_text, theme=None, character=None, title_language=None):
+def generate_youtube_metadata(script_text, theme=None, character=None, title_language=None, video_mode="short"):
     """
     Generates refined YouTube Shorts title, description, and tags using the 3-layer LLM fallback chain.
+    Supports 'short' and 'story' video modes.
     """
     chosen_lang = title_language or pick_random_title_language()
     theme_str = theme or "Devotion & Moral"
@@ -163,6 +164,15 @@ def generate_youtube_metadata(script_text, theme=None, character=None, title_lan
     }
     selected_lang_rule = lang_instructions.get(chosen_lang, lang_instructions["hinglish"])
 
+    mode_rule = ""
+    if video_mode == "story":
+        mode_rule = (
+            "VIDEO MODE IS 'STORY':\n"
+            "- Title MUST feature the suspenseful story hook / question (e.g. 'Krishna ne Govardhan Parvat Kaise Uthaya? 🏔️ #shorts #viral #krishna').\n"
+            "- Description MUST explicitly highlight the moral/spiritual lesson of the story in 2-3 lines before hashtags.\n"
+            "- Tags MUST include story narrative keywords (e.g. story, kahani, moral story, spiritual lesson).\n"
+        )
+
     prompt = f"""
 You are an expert YouTube Shorts creator for kids devotional and moral stories.
 Generate YouTube Shorts metadata based on the following script:
@@ -172,29 +182,31 @@ Script:
 
 Theme: {theme_str}
 Character: {char_str}
+Video Mode: {video_mode.upper()}
 Target Language: {chosen_lang.upper()}
 
 LANGUAGE RULES:
 {selected_lang_rule}
 
+{mode_rule}
 1. YOUTUBE TITLE RULES:
 - MUST be within 95 characters total.
-- Structure: [Hook] + [Character/Theme] + [1-2 Emojis] + [Hashtags]
+- Structure: [Hook/Question] + [Character/Theme] + [1-2 Emojis] + [Hashtags]
 - Required hashtags: ALWAYS include #shorts and #viral, plus 1-2 theme-specific hashtags (e.g., #krishna, #hanuman, #shiv, #ganesh, #jagannath, #durga, #lakshmi, #ram, #radha)
-- Emojis: Include 1-2 relevant emojis (🙏, 🕉️, 🦚, 🪔, 🐒, 🐘, 🧈, etc.)
+- Emojis: Include 1-2 relevant emojis (🙏, 🕉️, 🦚, 🪔, 🐒, 🐘, 🧈, 🏔️, etc.)
 
 2. YOUTUBE DESCRIPTION RULES:
-- 2-3 lines engaging summary of the video story in {chosen_lang.upper()}.
+- Engaging summary of the video story and its moral lesson in {chosen_lang.upper()}.
 - Include a clear call-to-action: "Subscribe for daily bhakti & moral stories!" (or target language equivalent).
 - Include 5-10 hashtags at the END of the description:
   Always: #shorts #viral #bhakti
   Theme-specific: e.g. #krishna #radha #hanuman #shiv #ganesh #durga #lakshmi #ram
-  Extra: #devotional #hindugods #aibhakti #3dart #moralstories
+  Extra: #devotional #hindugods #aibhakti #3dart #moralstories #story
 
 3. YOUTUBE TAGS RULES:
 - Return 10-15 tags as a JSON array of string tags.
 - Include BOTH Hindi (Devanagari script) and English/Hinglish versions (e.g. ["कृष्ण", "krishna", "हनुमान", "hanuman", "भक्ति", "bhakti", "shorts", "viral", "devotional", "hindu gods", "ai bhakti", "3d animation", "moral stories"]).
-- Include generic tags: shorts, viral, devotional, hindu gods, ai bhakti, 3d animation, moral stories.
+- Include generic tags: shorts, viral, devotional, hindu gods, ai bhakti, 3d animation, moral stories, hindi story.
 - Include theme/character-specific tags.
 
 Respond strictly in valid JSON format with three fields:

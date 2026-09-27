@@ -4,7 +4,7 @@ from config import get_secret, GEMINI_MODEL_CHAIN, GROQ_MODEL_CHAIN, OPENROUTER_
 from .history import generate_unique_script
 
 
-def generate_script(character=None, theme=None, duration=15, theme_config=None, scene_count=4):
+def generate_script(character=None, theme=None, duration=15, theme_config=None, scene_count=4, video_mode="short"):
     gemini_api_key = get_secret("GEMINI_API_KEY")
     groq_api_key = get_secret("GROQ_API_KEY")
     openrouter_api_key = get_secret("OPENROUTER_API_KEY")
@@ -126,6 +126,7 @@ def generate_script(character=None, theme=None, duration=15, theme_config=None, 
         duration=duration,
         theme_config=theme_config,
         scene_count=scene_count,
+        video_mode=video_mode,
     )
 
 

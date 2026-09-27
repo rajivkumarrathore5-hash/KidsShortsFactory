@@ -87,6 +87,7 @@ APPROVAL_PROMPT = (
 
 def _default_settings():
     return {
+        "video_mode": "short",
         "aspect_ratio": ASPECT_RATIO,
         "tts_voice": TTS_VOICE,
         "tts_provider": "indicf5",
@@ -179,6 +180,7 @@ def _generate_script(settings):
         duration=settings["duration_target"],
         theme_config=theme_config,
         scene_count=settings["scene_count"],
+        video_mode=settings.get("video_mode", "short"),
     )
 
 
@@ -192,34 +194,44 @@ def _determine_voice_for_theme(theme_config):
     return voice
 
 
-def calculate_scene_count(duration: int) -> int:
+def calculate_scene_count(duration: int, video_mode: str = "short") -> int:
     duration = int(duration)
-    if duration <= 20:
-        return 3
-    elif duration <= 30:
-        return 4
-    elif duration <= 45:
-        return 5
-    elif duration <= 60:
-        return 6
-    elif duration <= 90:
-        return 8
-    elif duration <= 120:
-        return 10
-    elif duration <= 150:
-        return 12
+    if video_mode == "story":
+        if duration <= 90:
+            return 9
+        elif duration <= 120:
+            return 11
+        elif duration <= 150:
+            return 13
+        else:
+            return 15
     else:
-        return 15
+        if duration <= 20:
+            return 3
+        elif duration <= 30:
+            return 4
+        elif duration <= 45:
+            return 5
+        elif duration <= 60:
+            return 6
+        else:
+            return 8
 
 
 def _select_dynamic_job(settings, character_override=None, duration_override=None):
+    video_mode = settings.get("video_mode", "short")
+    min_d, max_d = (15, 30) if video_mode == "short" else (60, 180)
+
     if duration_override is not None:
         duration = int(duration_override)
-        if not MIN_DURATION <= duration <= MAX_DURATION:
-            raise ValueError(f"Duration target must be between {MIN_DURATION} and {MAX_DURATION} seconds.")
-        print(f"[INFO] Duration: {duration} sec")
+        if not min_d <= duration <= max_d:
+            duration = max(min_d, min(duration, max_d))
+        print(f"[INFO] Duration: {duration} sec (mode: {video_mode})")
     else:
-        duration = pick_random_duration(MIN_DURATION, MAX_DURATION)
+        duration = settings.get("duration", settings.get("duration_target", 20 if video_mode == "short" else 90))
+        duration = int(duration)
+        if not min_d <= duration <= max_d:
+            duration = 20 if video_mode == "short" else 90
 
     if character_override and character_override.strip().casefold() != "random":
         char_query = character_override.strip().casefold()
@@ -242,7 +254,7 @@ def _select_dynamic_job(settings, character_override=None, duration_override=Non
     if not theme_config:
         raise ValueError("Theme selection returned None configuration.")
 
-    scene_count = calculate_scene_count(duration)
+    scene_count = calculate_scene_count(duration, video_mode=video_mode)
 
     image_seed = random.randint(0, 2**31 - 1) if AI_IMAGE_SEED_PER_VIDEO else None
     indicf5_speed = INDICF5_SPEED
@@ -265,7 +277,7 @@ def _select_dynamic_job(settings, character_override=None, duration_override=Non
         f"({theme_config['theme']}; {theme_config['character']}; "
         f"style: {theme_config['visual_style']})"
     )
-    print(f"[2/7] Duration: {duration} sec, Scenes: {scene_count}")
+    print(f"[2/7] Mode: {video_mode.upper()}, Duration: {duration} sec, Scenes: {scene_count}")
     return theme_config
 
 
@@ -549,6 +561,9 @@ def create_and_upload(
     saved_state = load_config_state()
     if saved_state:
         print("[INFO] Loaded settings from config_state.json")
+        if "video_mode" in saved_state:
+            settings["video_mode"] = str(saved_state["video_mode"])
+            print(f"[INFO] Video Mode: {settings['video_mode']} (from saved state)")
         if "aspect_ratio" in saved_state:
             settings["aspect_ratio"] = str(saved_state["aspect_ratio"])
             print(f"[INFO] Aspect Ratio: {settings['aspect_ratio']} (from saved state)")

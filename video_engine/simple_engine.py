@@ -456,10 +456,12 @@ def render_video(
         audio_index = len(clip_paths)
         cmd.extend(["-i", audio_path])
 
-        # FIX 1 & FIX 2: Random music file selection & random start offset
+        # Background music selection & handling (Short Mode vs Story Mode)
         selected_music_file = None
         use_music = False
         music_offset = 0.0
+        story_mode_music = False
+        section_music_inputs = []
 
         if background_music:
             project_root = Path(__file__).resolve().parents[1]
@@ -469,15 +471,67 @@ def render_video(
                 Path("assets/music"),
                 Path("data/music"),
             ]
-            music_files = []
+            music_files_dict = {}
             for search_dir in search_dirs:
                 if search_dir.is_dir():
                     for mp3 in search_dir.glob("*.mp3"):
-                        if mp3.is_file() and mp3 not in music_files:
-                            music_files.append(mp3)
+                        if mp3.is_file() and mp3.name not in music_files_dict:
+                            music_files_dict[mp3.name] = mp3
 
-            if music_files:
-                selected_music_file = random.choice(music_files)
+            available_files = list(music_files_dict.values())
+            has_sections = any(isinstance(s, dict) and s.get("section") for s in scene_data)
+
+            if has_sections and available_files:
+                story_mode_music = True
+                use_music = True
+                print("[MUSIC] Story Mode section music enabled (crossfade across sections)")
+
+                SECTION_MUSIC_CANDIDATES = {
+                    "hook": ["dhol_energy.mp3", "tabla_bhakti.mp3"],
+                    "setup": ["flute_soft.mp3", "sitar_calm.mp3"],
+                    "story": ["sitar_calm.mp3", "tabla_bhakti.mp3"],
+                    "twist": ["dhol_energy.mp3", "tabla_bhakti1.mp3"],
+                    "moral": ["flute_soft.mp3", "sitar_calm.mp3"],
+                    "cta": ["flute_soft.mp3"],
+                }
+
+                current_time = intro_duration
+                next_input_idx = audio_index + 1
+
+                for sc_idx, sc_dur in enumerate(scene_durations[:len(scene_data)]):
+                    sec_tag = str(scene_data[sc_idx].get("section", "story")).lower()
+                    candidates = SECTION_MUSIC_CANDIDATES.get(sec_tag, ["flute_soft.mp3"])
+                    chosen_mp3 = None
+                    for cand in candidates:
+                        if cand in music_files_dict:
+                            chosen_mp3 = music_files_dict[cand]
+                            break
+                    if not chosen_mp3:
+                        chosen_mp3 = random.choice(available_files)
+
+                    try:
+                        mp3_dur = _get_audio_duration(str(chosen_mp3))
+                        max_off = max(0.0, mp3_dur - sc_dur - 2.0)
+                        off_val = round(random.uniform(0, max_off), 2) if max_off > 0 else 0.0
+                    except Exception:
+                        off_val = 0.0
+
+                    section_music_inputs.append(
+                        {
+                            "input_idx": next_input_idx,
+                            "file_path": chosen_mp3,
+                            "offset": off_val,
+                            "start_time": current_time,
+                            "duration": sc_dur,
+                            "section": sec_tag,
+                        }
+                    )
+                    cmd.extend(["-ss", f"{off_val}", "-stream_loop", "-1", "-i", str(chosen_mp3)])
+                    next_input_idx += 1
+                    current_time += sc_dur
+
+            elif available_files:
+                selected_music_file = random.choice(available_files)
                 use_music = True
                 print(f"[MUSIC] Randomly selected: {selected_music_file.name}")
             elif music_path:
@@ -489,21 +543,21 @@ def render_video(
                     use_music = True
                     print(f"[MUSIC] Randomly selected: {selected_music_file.name}")
 
-            if use_music and selected_music_file:
+            if use_music and not story_mode_music and selected_music_file:
                 try:
-                    duration = _get_audio_duration(str(selected_music_file))
-                    max_offset = duration - final_video_duration - 5.0
+                    dur_val = _get_audio_duration(str(selected_music_file))
+                    max_offset = dur_val - final_video_duration - 5.0
                     if max_offset > 0:
                         music_offset = round(random.uniform(0, max_offset), 2)
                     else:
                         music_offset = 0.0
-                    print(f"[MUSIC] Playing from offset: {music_offset}s (file duration: {duration}s)")
+                    print(f"[MUSIC] Playing from offset: {music_offset}s (file duration: {dur_val}s)")
                 except Exception as offset_err:
                     music_offset = 0.0
                     print(f"[WARNING] Music offset calculation failed ({offset_err}), defaulting to 0s")
 
         music_index = None
-        if use_music and selected_music_file:
+        if use_music and not story_mode_music and selected_music_file:
             music_index = audio_index + 1
             if music_offset > 0:
                 cmd.extend(["-ss", f"{music_offset}", "-stream_loop", "-1", "-i", str(selected_music_file)])
@@ -676,11 +730,35 @@ def render_video(
             audio_filters.append(f"[{audio_index}:a]adelay={round(intro_duration * 1000)}:all=1[{voice_label}]")
         else:
             audio_filters.append(f"[{audio_index}:a]anull[{voice_label}]")
+
         if use_music:
             raw_vol = float(music_volume) if music_volume is not None else 1.0
             final_volume = round(max(1.50, raw_vol * 1.5), 2)
             print(f"[DEBUG] Music volume applied: {final_volume}")
-            audio_filters.append(f"[{music_index}:a]volume={final_volume:.2f}[music]")
+
+            if story_mode_music and section_music_inputs:
+                sec_labels = []
+                for idx_m, sec_info in enumerate(section_music_inputs):
+                    lbl_m = f"sec_m_{idx_m}"
+                    in_i = sec_info["input_idx"]
+                    dur_m = sec_info["duration"]
+                    del_m = round(sec_info["start_time"] * 1000)
+                    fade_d = min(0.3, dur_m / 2.0)
+                    filters.append(
+                        f"[{in_i}:a]atrim=0:{dur_m:.4f},"
+                        f"afade=t=in:st=0:d={fade_d:.3f},"
+                        f"afade=t=out:st={max(0, dur_m - fade_d):.3f}:d={fade_d:.3f},"
+                        f"adelay={del_m}:all=1[{lbl_m}]"
+                    )
+                    sec_labels.append(f"[{lbl_m}]")
+                
+                filters.append(
+                    f"{''.join(sec_labels)}amix=inputs={len(sec_labels)}:duration=first:dropout_transition=1[story_bg_raw]"
+                )
+                filters.append(f"[story_bg_raw]volume={final_volume:.2f}[music]")
+            else:
+                audio_filters.append(f"[{music_index}:a]volume={final_volume:.2f}[music]")
+
             audio_filters.append(
                 f"[{voice_label}][music]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[mixed]"
             )

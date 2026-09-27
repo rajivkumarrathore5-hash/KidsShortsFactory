@@ -152,7 +152,8 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
 
     # AI Metadata Generation (Requirement 4)
     script_text = script or description or title or "Kids Short Story"
-    metadata = generate_youtube_metadata(script_text, theme=theme, character=character)
+    v_mode = config_state.get("video_mode", "short")
+    metadata = generate_youtube_metadata(script_text, theme=theme, character=character, video_mode=v_mode)
 
     final_title = (title or metadata["title"]).strip()[:100]
     final_description = (description or metadata["description"]).strip()[:5000]

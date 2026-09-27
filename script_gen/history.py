@@ -101,7 +101,7 @@ def _normalize_script(script):
     return " ".join(re.findall(r"\w+", normalized, flags=re.UNICODE))
 
 
-def _build_prompt(character, theme, duration, history, theme_config=None, scene_count=4):
+def _build_prompt(character, theme, duration, history, theme_config=None, scene_count=4, video_mode="short"):
     previous_scripts = "\n".join(
         f"- {entry['script']}" for entry in history if entry["script"].strip()
     )
@@ -114,19 +114,77 @@ def _build_prompt(character, theme, duration, history, theme_config=None, scene_
     mood = theme_config.get("mood", "devotional and child-friendly")
     setting = theme_config.get("setting", "a respectful devotional setting")
     base_style = theme_config.get("base_style", "cinematic devotional art")
-    visual_style = theme_config.get("visual_style", "cinematic devotional art")
-    schema = {
-        "character": output_character,
-        "base_style": base_style,
-        "scenes": [
-            {
-                "text": f"Short spoken Hindi narration sentence for scene {index + 1}.",
-                "visual_prompt": f"Detailed 60-100 word English image prompt for scene {index + 1}.",
-            }
-            for index in range(scene_count)
-        ],
-    }
-    return f"""Generate a unique Hindi devotional short as valid JSON only.
+
+    if video_mode == "story":
+        sections_distribution = ["hook", "setup", "story", "twist", "moral", "cta"]
+        schema = {
+            "character": output_character,
+            "theme": theme_name,
+            "story_title": f"Story title about {output_character}",
+            "total_duration": duration,
+            "base_style": base_style,
+            "scenes": [
+                {
+                    "section": sections_distribution[min(index, len(sections_distribution) - 1)],
+                    "text": f"Spoken Hindi narration sentence for {sections_distribution[min(index, len(sections_distribution) - 1)]} section.",
+                    "visual_prompt": f"Detailed 60-100 word English image prompt for scene {index + 1}.",
+                }
+                for index in range(scene_count)
+            ],
+        }
+        return f"""Generate a unique long-form Hindi devotional STORY as valid JSON only.
+Use exactly this JSON shape, with no Markdown fences or text outside the JSON:
+{json.dumps(schema, ensure_ascii=False, indent=2)}
+
+Character: {character}
+Theme: {theme_name}
+Mood: {mood}
+Setting: {setting}
+Base visual style: {base_style}
+
+Length: Exactly {scene_count} scenes across the story, total target duration {duration} seconds.
+Target approximately {duration * 12} Hindi characters total across all scene text.
+
+STORY STRUCTURE REQUIREMENTS (for "scenes"):
+Each scene MUST have a "section" tag matching the narrative flow:
+1. "hook" (3-5s): Suspenseful question or surprising statement (e.g. "Kya aap jaante hain...?", "Ek aisi kahani jo aapko hairan kar degi...").
+2. "setup" (10-15s): Introduce character, scene, time, place, and mood.
+3. "story" (25-30s): Main narrative with action, dialogue, and rising tension.
+4. "twist" (15-20s): Emotional peak, surprising reveal, or turning point.
+5. "moral" (10-15s): Moral lesson, wisdom, or spiritual takeaway.
+6. "cta" (2-3s): Call-to-action like "Subscribe for daily bhakti!" or "Comment Jai Shri Krishna!".
+
+JSON Requirements:
+1. "character": Must be exactly "{output_character}".
+2. "story_title": Engaging title for the story.
+3. "scenes": Exactly {scene_count} scene objects. Each scene MUST contain:
+   - "section": One of ["hook", "setup", "story", "twist", "moral", "cta"].
+   - "text": Spoken Hindi narration text.
+   - "visual_prompt": A DETAILED English image prompt (60-100 words) with consistent character description.
+
+CRITICAL VISUAL PROMPT REQUIREMENTS:
+- Character Description: Detailed character description (e.g., "cute baby Krishna with blue skin, peacock feather, yellow dhoti, gold jewelry").
+  MUST USE THE EXACT SAME CHARACTER DESCRIPTION ACROSS ALL SCENES for visual consistency!
+- Style Keywords: "3D render, Pixar-style, hyperrealistic, cinematic lighting, soft shadows, 8k, devotional art, vertical composition, 9:16".
+
+Language: Natural Hindi for "text". English for "visual_prompt".
+Previous scripts to avoid repeating:
+{previous_scripts}
+"""
+
+    else:
+        schema = {
+            "character": output_character,
+            "base_style": base_style,
+            "scenes": [
+                {
+                    "text": f"Short spoken Hindi narration sentence for scene {index + 1}.",
+                    "visual_prompt": f"Detailed 60-100 word English image prompt for scene {index + 1}.",
+                }
+                for index in range(scene_count)
+            ],
+        }
+        return f"""Generate a unique Hindi devotional short as valid JSON only.
 Use exactly this JSON shape, with no Markdown fences or text outside the JSON:
 {json.dumps(schema, ensure_ascii=False, indent=2)}
 
@@ -199,12 +257,14 @@ def parse_structured_script(
     returned_theme = data.get("theme", theme_config.get("theme", ""))
     mood = data.get("mood", theme_config.get("mood", ""))
     base_style = data.get("base_style", theme_config.get("base_style", ""))
+    story_title = data.get("story_title", "")
     scenes = []
     for scene_number, scene in enumerate(data["scenes"], start=1):
         if not isinstance(scene, dict):
             raise ValueError(f"Scene {scene_number} must be a JSON object.")
         scene_text = scene.get("text")
         visual_prompt = scene.get("visual_prompt", "")
+        section = scene.get("section", "story")
         keywords = scene.get("visual_keywords", [])
         if not isinstance(keywords, list):
             keywords = []
@@ -214,6 +274,7 @@ def parse_structured_script(
             raise ValueError(f"Scene {scene_number} must have a non-empty visual_prompt.")
         scenes.append(
             {
+                "section": str(section).strip().lower(),
                 "text": scene_text.strip(),
                 "visual_prompt": visual_prompt.strip(),
                 "visual_keywords": [k.strip() for k in keywords if isinstance(k, str) and k.strip()],
@@ -225,6 +286,7 @@ def parse_structured_script(
         "theme": returned_theme,
         "mood": mood,
         "base_style": base_style,
+        "story_title": story_title,
         "scenes": scenes,
     }
 
@@ -260,6 +322,7 @@ def generate_unique_script(
     duration=15,
     theme_config=None,
     scene_count=4,
+    video_mode="short",
 ):
     theme_config = theme_config or {}
     character = theme_config.get("character", character)
@@ -281,7 +344,7 @@ def generate_unique_script(
 
     for _ in range(MAX_GENERATION_ATTEMPTS):
         response = generate_response(
-            _build_prompt(character, theme, duration, history, theme_config, scene_count)
+            _build_prompt(character, theme, duration, history, theme_config, scene_count, video_mode=video_mode)
         )
         if not isinstance(response, str) or not response.strip():
             raise RuntimeError("The script provider returned an empty script.")
