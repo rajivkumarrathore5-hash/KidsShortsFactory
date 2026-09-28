@@ -53,6 +53,12 @@ def save_config_state(settings: dict):
         except (ValueError, TypeError):
             dur_val = "auto"
 
+    overlay_enabled = bool(settings.get("overlay_enabled", True))
+    try:
+        overlay_transparency = int(settings.get("overlay_transparency", 50))
+    except (ValueError, TypeError):
+        overlay_transparency = 50
+
     state_data = {
         **existing_state,
         "video_mode": video_mode,
@@ -64,6 +70,8 @@ def save_config_state(settings: dict):
         "caption_style": settings.get("caption_style", "bottom_bold"),
         "brightness": int(settings.get("brightness", 0)),
         "contrast": int(settings.get("contrast", 0)),
+        "overlay_enabled": overlay_enabled,
+        "overlay_transparency": overlay_transparency,
         "last_updated": datetime.now().isoformat(timespec="seconds"),
     }
     try:
@@ -88,6 +96,9 @@ def show_settings_menu(current_settings: dict) -> dict:
         caption_style = settings.get("caption_style", "bottom_bold")
         brightness = int(settings.get("brightness", 0))
         contrast = int(settings.get("contrast", 0))
+        overlay_enabled = bool(settings.get("overlay_enabled", True))
+        overlay_transparency = int(settings.get("overlay_transparency", 50))
+        overlay_display = f"Enabled ({overlay_transparency}%)" if overlay_enabled else "Disabled"
 
         print("\n==========================================")
         print("         PRE-RUN SETTINGS MENU            ")
@@ -101,11 +112,12 @@ def show_settings_menu(current_settings: dict) -> dict:
         print(f"[7] Caption Style         : {caption_style}")
         print(f"[8] Brightness            : {brightness}%")
         print(f"[9] Contrast              : {contrast}%")
+        print(f"[10] Overlay Effects      : {overlay_display}")
         print("[Enter] Confirm & Run Pipeline")
         print("==========================================")
 
         try:
-            choice = input("Select option (1-9) or press Enter to run: ").strip()
+            choice = input("Select option (1-10) or press Enter to run: ").strip()
         except EOFError:
             choice = ""
 
@@ -236,6 +248,10 @@ def show_settings_menu(current_settings: dict) -> dict:
             except ValueError:
                 print("[ERROR] Invalid integer input.")
 
+        elif choice == "10":
+            from pipeline.overlay import ask_overlay_settings
+            settings = ask_overlay_settings(settings)
+
         else:
-            print("[ERROR] Please select 1-9 or press Enter.")
+            print("[ERROR] Please select 1-10 or press Enter.")
 

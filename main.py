@@ -129,6 +129,8 @@ def _default_settings():
         "caption_style": "bottom_bold",
         "brightness": 0,
         "contrast": 0,
+        "overlay_enabled": True,
+        "overlay_transparency": 50,
     }
 
 
@@ -366,10 +368,11 @@ def _render_video(script, settings):
     render_engine = get_render_engine()
     render_label = "Ken Burns (zoom+pan+rotate) + transitions" if settings["ken_burns_enabled"] else "scene render"
     print(f"Rendering with {render_label}...")
+    raw_video_path = os.path.join(OUTPUT_DIR, f"temp_base_{timestamp}.mp4")
     render_engine(
         audio_path,
         narration_text,
-        video_path,
+        raw_video_path,
         duration=settings["duration_target"],
         image_paths=image_paths,
         aspect_ratio=settings["aspect_ratio"],
@@ -397,8 +400,21 @@ def _render_video(script, settings):
         caption_style=settings.get("caption_style"),
     )
 
-    if not os.path.isfile(video_path) or os.path.getsize(video_path) == 0:
+    if not os.path.isfile(raw_video_path) or os.path.getsize(raw_video_path) == 0:
         raise RuntimeError("Renderer did not create a non-empty video file.")
+
+    # Apply overlay effects (particles, sparkles, light leaks) if enabled
+    from pipeline.overlay import apply_overlays
+    apply_overlays(raw_video_path, video_path, settings)
+
+    if os.path.isfile(raw_video_path) and os.path.abspath(raw_video_path) != os.path.abspath(video_path):
+        try:
+            os.remove(raw_video_path)
+        except Exception:
+            pass
+
+    if not os.path.isfile(video_path) or os.path.getsize(video_path) == 0:
+        raise RuntimeError("Final video file was not created.")
     video_info = get_video_info(video_path)
     expected_resolution = resolution_for_aspect_ratio(settings["aspect_ratio"])
     if (video_info["width"], video_info["height"]) != expected_resolution:
@@ -610,6 +626,15 @@ def create_and_upload(
                 c_val = int(saved_state["contrast"])
                 settings["contrast"] = c_val
                 print(f"[INFO] Contrast: {c_val}% (from saved state)")
+            except (ValueError, TypeError):
+                pass
+        if "overlay_enabled" in saved_state:
+            settings["overlay_enabled"] = bool(saved_state["overlay_enabled"])
+            print(f"[INFO] Overlay Enabled: {settings['overlay_enabled']} (from saved state)")
+        if "overlay_transparency" in saved_state:
+            try:
+                settings["overlay_transparency"] = int(saved_state["overlay_transparency"])
+                print(f"[INFO] Overlay Transparency: {settings['overlay_transparency']}% (from saved state)")
             except (ValueError, TypeError):
                 pass
 
