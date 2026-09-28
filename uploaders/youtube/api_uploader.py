@@ -93,21 +93,67 @@ def _tags_from_script(script):
 
 def get_next_publish_time(config_state, interval_hours):
     now_utc = datetime.now(timezone.utc)
+    now_local = datetime.now().astimezone()
     raw_next = config_state.get("next_publish_time")
 
-    dt_publish_at = None
-    if raw_next:
-        try:
-            dt = datetime.fromisoformat(raw_next.replace("Z", "+00:00"))
-            if dt > now_utc:
-                dt_publish_at = dt
-        except Exception:
-            dt_publish_at = None
+    dt_publish_at_local = None
+    dt_publish_at_utc = None
 
-    if not dt_publish_at:
-        dt_publish_at = now_utc + timedelta(hours=interval_hours)
+    if raw_next and str(raw_next).strip():
+        raw_str = str(raw_next).strip()
+        formats = [
+            "%d/%m/%Y %I:%M %p",
+            "%d/%m/%Y %I:%M%p",
+            "%d/%m/%Y %H:%M",
+            "%d-%m-%Y %I:%M %p",
+            "%d-%m-%Y %I:%M%p",
+            "%d-%m-%Y %H:%M",
+            "%Y-%m-%d %I:%M %p",
+            "%Y-%m-%d %H:%M",
+        ]
+        parsed_dt = None
+        for fmt in formats:
+            try:
+                parsed_dt = datetime.strptime(raw_str, fmt)
+                break
+            except ValueError:
+                continue
 
-    return dt_publish_at
+        if parsed_dt is not None:
+            # Treat naive parsed time as local time and convert to UTC
+            dt_publish_at_local = parsed_dt.astimezone()
+            dt_publish_at_utc = dt_publish_at_local.astimezone(timezone.utc)
+        else:
+            # Fallback for ISO 8601 legacy strings
+            try:
+                dt_iso = datetime.fromisoformat(raw_str.replace("Z", "+00:00"))
+                dt_publish_at_utc = dt_iso.astimezone(timezone.utc)
+                dt_publish_at_local = dt_publish_at_utc.astimezone()
+            except Exception:
+                dt_publish_at_utc = None
+                dt_publish_at_local = None
+
+        if dt_publish_at_utc and dt_publish_at_utc > now_utc:
+            utc_iso = dt_publish_at_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+            print(f"[SCHEDULE] Next publish time (from file): {raw_str} (local) -> {utc_iso} (UTC)")
+            return dt_publish_at_local, dt_publish_at_utc
+
+    # Default if missing, invalid, or in the past
+    default_local = now_local + timedelta(hours=interval_hours)
+    default_utc = default_local.astimezone(timezone.utc)
+    new_time_str = default_local.strftime("%d/%m/%Y %I:%M %p")
+    print(f"[SCHEDULE] No valid time found. Defaulting to now + {interval_hours} hours: {new_time_str}")
+
+    full_state = load_config_state()
+    full_state["next_publish_time"] = new_time_str
+    config_state["next_publish_time"] = new_time_str
+    try:
+        import json
+        CONFIG_STATE_PATH.write_text(json.dumps(full_state, indent=2), encoding="utf-8")
+    except Exception as e:
+        print(f"[WARNING] Could not save default next_publish_time: {e}")
+
+    return default_local, default_utc
 
 
 def check_rate_limit(config_state):
@@ -144,11 +190,13 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
         return None
 
     interval_hours = SCHEDULE_INTERVAL_HOURS
-    publish_at_dt = get_next_publish_time(config_state, interval_hours)
-    publish_at_iso = publish_at_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    publish_at_local, publish_at_utc = get_next_publish_time(config_state, interval_hours)
+    publish_at_iso = publish_at_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    next_slot_dt = publish_at_dt + timedelta(hours=interval_hours)
-    next_slot_iso = next_slot_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    next_slot_local = publish_at_local + timedelta(hours=interval_hours)
+    next_slot_str = next_slot_local.strftime("%d/%m/%Y %I:%M %p")
+    next_slot_utc = next_slot_local.astimezone(timezone.utc)
+    next_slot_iso = next_slot_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # AI Metadata Generation (Requirement 4)
     script_text = script or description or title or "Kids Short Story"
@@ -159,11 +207,11 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
     final_description = (description or metadata["description"]).strip()[:5000]
     tags = metadata.get("tags") or _tags_from_script(script_text)
 
-    # Required scheduling logs (Requirement 2)
+    # Required scheduling logs
     print(f"[UPLOAD] Uploading video: {video_path.name}")
     print(f"[UPLOAD] Title: {final_title}")
-    print(f"[UPLOAD] Scheduled to go public at: {publish_at_iso}")
-    print(f"[UPLOAD] Next scheduled slot: {next_slot_iso}")
+    print(f"[UPLOAD] Scheduled to go public at: {publish_at_iso} ({publish_at_local.strftime('%d/%m/%Y %I:%M %p')} local)")
+    print(f"[UPLOAD] Next scheduled slot: {next_slot_str}")
     print(f"[UPLOAD] Made for Kids: {MADE_FOR_KIDS} (target audience: {'kids' if MADE_FOR_KIDS else 'adults'})")
 
     youtube = _get_youtube_service()
@@ -195,7 +243,6 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
         ),
     )
 
-
     response = None
     while response is None:
         _, response = request.next_chunk()
@@ -210,14 +257,16 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
         "video_id": video_id,
         "uploaded_at": now_iso,
         "publish_at": publish_at_iso,
+        "publish_at_local": publish_at_local.strftime("%d/%m/%Y %I:%M %p"),
     })
 
-    config_state["next_publish_time"] = next_slot_iso
+    config_state["next_publish_time"] = next_slot_str
     config_state["upload_history"] = upload_history
 
     try:
         import json
         CONFIG_STATE_PATH.write_text(json.dumps(config_state, indent=2), encoding="utf-8")
+        print(f"[SCHEDULE] Next publish time updated to: {next_slot_str}")
     except Exception as e:
         print(f"[WARNING] Could not update config_state.json after upload: {e}")
 

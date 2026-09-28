@@ -38,11 +38,26 @@ def save_config_state(settings: dict):
     except (ValueError, TypeError):
         music_vol = 0.15
 
+    raw_mode = str(settings.get("video_mode", "auto")).strip().lower()
+    if raw_mode in ("short", "story", "auto"):
+        video_mode = raw_mode
+    else:
+        video_mode = "auto"
+
+    raw_dur = settings.get("duration", settings.get("duration_target", "auto"))
+    if str(raw_dur).strip().lower() == "auto":
+        dur_val = "auto"
+    else:
+        try:
+            dur_val = int(raw_dur)
+        except (ValueError, TypeError):
+            dur_val = "auto"
+
     state_data = {
         **existing_state,
-        "video_mode": settings.get("video_mode", "short"),
+        "video_mode": video_mode,
         "aspect_ratio": settings.get("aspect_ratio", "9:16"),
-        "duration": int(settings.get("duration", settings.get("duration_target", 15))),
+        "duration": dur_val,
         "music_volume": round(music_vol, 2),
         "tts_rate": settings.get("tts_rate", "+0%"),
         "tts_pitch": settings.get("tts_pitch", "+0Hz"),
@@ -62,9 +77,10 @@ def show_settings_menu(current_settings: dict) -> dict:
     settings = dict(current_settings)
 
     while True:
-        video_mode = settings.get("video_mode", "short")
+        video_mode = settings.get("video_mode", "auto")
         aspect_ratio = settings.get("aspect_ratio", "9:16")
-        duration = settings.get("duration", settings.get("duration_target", 20 if video_mode == "short" else 90))
+        duration = settings.get("duration", settings.get("duration_target", "auto"))
+        duration_display = f"{duration} sec" if str(duration).isdigit() else str(duration)
         music_vol = float(settings.get("music_volume", 0.15))
         music_pct = int(round(music_vol * 100))
         tts_rate = settings.get("tts_rate", "+0%")
@@ -78,7 +94,7 @@ def show_settings_menu(current_settings: dict) -> dict:
         print("==========================================")
         print(f"[1] Video Mode            : {video_mode}")
         print(f"[2] Aspect Ratio          : {aspect_ratio}")
-        print(f"[3] Duration              : {duration} sec")
+        print(f"[3] Duration              : {duration_display}")
         print(f"[4] Background Music Vol  : {music_pct}% ({music_vol:.2f})")
         print(f"[5] TTS Rate              : {tts_rate}")
         print(f"[6] TTS Pitch             : {tts_pitch}")
@@ -100,31 +116,20 @@ def show_settings_menu(current_settings: dict) -> dict:
         if choice == "1":
             print("\nSelect Video Mode:")
             print("[1] short - 15 to 30 seconds, simple script")
-            print("[2] story - 60 to 180 seconds, full story (hook + setup + story + twist + moral + CTA)")
-            val = input("Enter choice (1-2): ").strip().lower()
-            old_mode = settings.get("video_mode", "short")
-            new_mode = None
+            print("[2] story - 60 to 180 seconds, full story")
+            print("[3] auto  - alternate between short and story each run")
+            val = input("Enter choice (1-3): ").strip().lower()
             if val in ("1", "short"):
-                new_mode = "short"
+                settings["video_mode"] = "short"
+                print("[OK] Video Mode set to 'short'")
             elif val in ("2", "story"):
-                new_mode = "story"
+                settings["video_mode"] = "story"
+                print("[OK] Video Mode set to 'story'")
+            elif val in ("3", "auto"):
+                settings["video_mode"] = "auto"
+                print("[OK] Video Mode set to 'auto'")
             else:
-                print("[ERROR] Invalid choice. Select 1 or 2.")
-
-            if new_mode and new_mode != old_mode:
-                settings["video_mode"] = new_mode
-                print(f"[OK] Video Mode set to '{new_mode}'")
-                # Mode switching duration reset rules (FIX 5)
-                if new_mode == "short":
-                    settings["duration"] = 20
-                    settings["duration_target"] = 20
-                    print("[INFO] Duration reset to default for short mode: 20 sec")
-                elif new_mode == "story":
-                    settings["duration"] = 90
-                    settings["duration_target"] = 90
-                    print("[INFO] Duration reset to default for story mode: 90 sec")
-            elif new_mode:
-                print(f"[OK] Video Mode remains '{new_mode}'")
+                print("[ERROR] Invalid choice. Select 1, 2, or 3.")
 
         elif choice == "2":
             val = input("Enter Aspect Ratio (e.g. 9:16, 12:16, 14:16, 1:1, 4:5): ").strip()
@@ -135,16 +140,25 @@ def show_settings_menu(current_settings: dict) -> dict:
                 print("[ERROR] Invalid aspect ratio format.")
 
         elif choice == "3":
-            current_mode = settings.get("video_mode", "short")
-            min_d, max_d = (15, 30) if current_mode == "short" else (60, 180)
-            val = input(f"Enter Duration in seconds ({min_d}-{max_d}): ").strip()
-            if val.isdigit() and min_d <= int(val) <= max_d:
-                dur = int(val)
-                settings["duration"] = dur
-                settings["duration_target"] = dur
-                print(f"[OK] Duration set to {dur} sec")
+            print("\nSelect Duration Option:")
+            print("[1] manual - enter a specific value (15-180)")
+            print("[2] auto   - rotate through preset values based on mode")
+            opt = input("Enter choice (1-2): ").strip().lower()
+            if opt in ("1", "manual"):
+                val = input("Enter Duration in seconds (15-180): ").strip()
+                if val.isdigit() and 15 <= int(val) <= 180:
+                    dur = int(val)
+                    settings["duration"] = dur
+                    settings["duration_target"] = dur
+                    print(f"[OK] Duration set to {dur} sec")
+                else:
+                    print("[ERROR] Invalid duration. Enter an integer between 15 and 180.")
+            elif opt in ("2", "auto"):
+                settings["duration"] = "auto"
+                settings["duration_target"] = "auto"
+                print("[OK] Duration set to 'auto'")
             else:
-                print(f"[ERROR] Invalid duration. Enter an integer between {min_d} and {max_d}.")
+                print("[ERROR] Invalid choice. Select 1 or 2.")
 
         elif choice == "4":
             val = input("Enter Background Music Volume % (0-100, e.g. 20, 50, 80): ").strip().rstrip("%")

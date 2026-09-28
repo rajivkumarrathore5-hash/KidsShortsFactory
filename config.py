@@ -58,6 +58,12 @@ INDICF5_SERVER_PYTHON = os.getenv(
 	"INDICF5_SERVER_PYTHON",
 	r"C:\Users\91757\Downloads\movie_explainer_5\indicf5_test\.venv\Scripts\python.exe",
 )
+INDICF5_AUTO_START = os.getenv("INDICF5_AUTO_START", "true").strip().lower() in {
+	"1", "true", "yes", "on"
+}
+INDICF5_AUTO_STOP = os.getenv("INDICF5_AUTO_STOP", "true").strip().lower() in {
+	"1", "true", "yes", "on"
+}
 CHARACTER = os.getenv("CHARACTER", "Krishna")
 THEME = os.getenv("THEME", "Devotion")
 DURATION_TARGET = int(os.getenv("DURATION_TARGET", "20"))
@@ -113,6 +119,9 @@ _raw_openrouter_chain = get_secret(
 	"openrouter/free,qwen/qwen3-coder:free,deepseek/deepseek-r1:free",
 )
 OPENROUTER_MODEL_CHAIN = [m.strip() for m in _raw_openrouter_chain.split(",") if m.strip()]
+REMEMBER_LAST_MODEL = os.getenv("REMEMBER_LAST_MODEL", "true").strip().lower() in {
+	"1", "true", "yes", "on"
+}
 
 # ------ SCRIPT GENERATOR (Options: "gemini", "groq") ------
 
@@ -129,7 +138,7 @@ RENDER_ENGINE = "simple"
 
 # ------ UPLOADERS ------
 YOUTUBE_PROVIDER = "api"
-FACEBOOK_PROVIDER = "selenium"
+FACEBOOK_PROVIDER = os.getenv("FACEBOOK_PROVIDER", "graph_api").strip().lower()
 INSTAGRAM_PROVIDER = "instagrapi"
 MADE_FOR_KIDS = os.getenv("MADE_FOR_KIDS", "false").strip().lower() in {
     "1", "true", "yes", "on"
@@ -139,7 +148,7 @@ MADE_FOR_KIDS = os.getenv("MADE_FOR_KIDS", "false").strip().lower() in {
 SHORT_DURATION = DURATION_TARGET
 
 # ------ SCHEDULING ------
-SCHEDULE_INTERVAL_HOURS = int(get_secret("SCHEDULE_INTERVAL_HOURS", "9"))
+SCHEDULE_INTERVAL_HOURS = int(get_secret("SCHEDULE_INTERVAL_HOURS", "7"))
 UPLOAD_INTERVAL_HOURS = SCHEDULE_INTERVAL_HOURS
 
 # ------ FALLBACK STRATEGY ------

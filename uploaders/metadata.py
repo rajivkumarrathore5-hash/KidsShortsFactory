@@ -1,93 +1,15 @@
 import json
 import random
 import re
-import requests
-from google import genai
-from config import get_secret, GEMINI_MODEL_CHAIN, GROQ_MODEL_CHAIN, OPENROUTER_MODEL_CHAIN
+from config import get_secret
 
 
 def _llm_generate_text(prompt: str) -> str:
     """
-    Generate text using the 3-layer fallback chain (Gemini -> Groq -> OpenRouter).
+    Generate text using the 3-layer fallback chain with persisted last successful model.
     """
-    gemini_api_key = get_secret("GEMINI_API_KEY")
-    groq_api_key = get_secret("GROQ_API_KEY")
-    openrouter_api_key = get_secret("OPENROUTER_API_KEY")
-
-    gemini_client = genai.Client(api_key=gemini_api_key) if gemini_api_key else None
-
-    groq_client = None
-    if groq_api_key:
-        try:
-            from groq import Groq
-            groq_client = Groq(api_key=groq_api_key)
-        except Exception:
-            groq_client = None
-
-    # LAYER 1: Gemini fallback chain
-    if gemini_client:
-        total_gemini = len(GEMINI_MODEL_CHAIN)
-        for idx, model_name in enumerate(GEMINI_MODEL_CHAIN, start=1):
-            try:
-                response = gemini_client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                )
-                if response and response.text:
-                    return response.text
-            except Exception as err:
-                err_str = str(err)
-                is_429 = (
-                    "429" in err_str
-                    or "RESOURCE_EXHAUSTED" in err_str
-                    or "quota" in err_str.lower()
-                )
-                if is_429:
-                    print(f"[FALLBACK] Gemini {model_name} quota exceeded (429) for metadata, trying next...")
-                else:
-                    print(f"[WARN] Gemini {model_name} failed for metadata: {err_str}, trying next...")
-
-    # LAYER 2: Groq fallback chain
-    if groq_client:
-        total_groq = len(GROQ_MODEL_CHAIN)
-        for idx, model_name in enumerate(GROQ_MODEL_CHAIN, start=1):
-            try:
-                completion = groq_client.chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model=model_name,
-                )
-                content = completion.choices[0].message.content
-                if content and content.strip():
-                    return content
-            except Exception as err:
-                print(f"[FALLBACK] Groq {model_name} failed for metadata: {err}")
-
-    # LAYER 3: OpenRouter Free Models fallback chain
-    if openrouter_api_key:
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {openrouter_api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://kidsshortsfactory.local",
-            "X-Title": "KidsShortsFactory",
-        }
-        total_openrouter = len(OPENROUTER_MODEL_CHAIN)
-        for idx, model_name in enumerate(OPENROUTER_MODEL_CHAIN, start=1):
-            try:
-                payload = {
-                    "model": model_name,
-                    "messages": [{"role": "user", "content": prompt}],
-                }
-                res = requests.post(url, headers=headers, json=payload, timeout=45)
-                if res.status_code == 200:
-                    data = res.json()
-                    content = data["choices"][0]["message"]["content"]
-                    if content and content.strip():
-                        return content
-            except Exception as err:
-                print(f"[FALLBACK] OpenRouter {model_name} failed for metadata: {err}")
-
-    return ""
+    from script_gen.gemini import generate_text_with_fallback
+    return generate_text_with_fallback(prompt, is_metadata=True)
 
 
 def pick_random_title_language() -> str:

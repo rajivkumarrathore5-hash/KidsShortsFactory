@@ -87,7 +87,7 @@ APPROVAL_PROMPT = (
 
 def _default_settings():
     return {
-        "video_mode": "short",
+        "video_mode": "auto",
         "aspect_ratio": ASPECT_RATIO,
         "tts_voice": TTS_VOICE,
         "tts_provider": "indicf5",
@@ -106,7 +106,8 @@ def _default_settings():
 
         "character": CHARACTER,
         "theme": THEME,
-        "duration_target": DURATION_TARGET,
+        "duration": "auto",
+        "duration_target": "auto",
         "caption_mode": CAPTION_MODE,
         "font_path": FONT_PATH,
         "caption_font_size": CAPTION_FONT_SIZE,
@@ -220,7 +221,7 @@ def calculate_scene_count(duration: int, video_mode: str = "short") -> int:
 
 def _select_dynamic_job(settings, character_override=None, duration_override=None):
     video_mode = settings.get("video_mode", "short")
-    min_d, max_d = (15, 30) if video_mode == "short" else (60, 180)
+    min_d, max_d = (15, 60) if video_mode == "short" else (60, 180)
 
     if duration_override is not None:
         duration = int(duration_override)
@@ -535,6 +536,7 @@ def create_and_upload(
     reset_ratio=False,
     character_override=None,
     duration_override=None,
+    mode_override=None,
     no_menu=False,
     enable_upload_override=False,
 ):
@@ -557,7 +559,7 @@ def create_and_upload(
     settings = _default_settings()
     settings["effects"] = effects
 
-    # Load from config_state.json if available (aspect_ratio, duration, music_volume, tts_rate, tts_pitch)
+    # Load from config_state.json if available
     saved_state = load_config_state()
     if saved_state:
         print("[INFO] Loaded settings from config_state.json")
@@ -568,9 +570,18 @@ def create_and_upload(
             settings["aspect_ratio"] = str(saved_state["aspect_ratio"])
             print(f"[INFO] Aspect Ratio: {settings['aspect_ratio']} (from saved state)")
         if "duration" in saved_state:
-            settings["duration_target"] = int(saved_state["duration"])
-            settings["duration"] = int(saved_state["duration"])
-            print(f"[INFO] Duration: {settings['duration_target']} sec (from saved state)")
+            raw_dur = saved_state["duration"]
+            if str(raw_dur).strip().lower() == "auto":
+                settings["duration"] = "auto"
+                settings["duration_target"] = "auto"
+            else:
+                try:
+                    settings["duration"] = int(raw_dur)
+                    settings["duration_target"] = int(raw_dur)
+                except (ValueError, TypeError):
+                    settings["duration"] = "auto"
+                    settings["duration_target"] = "auto"
+            print(f"[INFO] Duration: {settings['duration_target']} (from saved state)")
         if "music_volume" in saved_state:
             try:
                 vol = float(saved_state["music_volume"])
@@ -614,16 +625,37 @@ def create_and_upload(
     if cli_ratio:
         settings["aspect_ratio"] = cli_ratio.strip()
         print(f"[INFO] Aspect Ratio CLI override: {settings['aspect_ratio']}")
+    if mode_override is not None:
+        settings["video_mode"] = str(mode_override).strip().lower()
+        print(f"[INFO] Video Mode CLI override: {settings['video_mode']}")
     if duration_override is not None:
-        settings["duration_target"] = int(duration_override)
-        settings["duration"] = int(duration_override)
-        print(f"[INFO] Duration CLI override: {settings['duration_target']} sec")
+        if str(duration_override).strip().lower() == "auto":
+            settings["duration"] = "auto"
+            settings["duration_target"] = "auto"
+        else:
+            settings["duration"] = int(duration_override)
+            settings["duration_target"] = int(duration_override)
+        print(f"[INFO] Duration CLI override: {settings['duration_target']}")
 
-    # Show menu unless --no-menu flag is passed (FIX 1)
+    # Show menu unless --no-menu flag is passed
     if no_menu:
         save_config_state(settings)
     else:
         settings = show_settings_menu(settings)
+
+    # Auto mode and duration rotation resolution
+    from pipeline.rotation import resolve_video_mode, resolve_duration
+
+    resolved_mode = resolve_video_mode(settings.get("video_mode", "auto"), saved_state)
+    settings["video_mode"] = resolved_mode
+
+    resolved_duration = resolve_duration(
+        settings.get("duration", settings.get("duration_target", "auto")),
+        resolved_mode,
+        saved_state,
+    )
+    settings["duration"] = resolved_duration
+    settings["duration_target"] = resolved_duration
 
     effects["brightness"] = settings.get("brightness", 0)
     effects["contrast"] = settings.get("contrast", 0)
@@ -714,16 +746,23 @@ def main(argv=None):
         help="Force a specific character theme (e.g., Hanuman, Krishna)",
     )
     parser.add_argument(
-        "--duration",
-        type=int,
+        "--mode",
+        type=str,
         default=None,
-        help="Force video duration in seconds (15-180)",
+        choices=["short", "story", "auto"],
+        help="Set video mode (short | story | auto)",
+    )
+    parser.add_argument(
+        "--duration",
+        type=str,
+        default=None,
+        help="Force video duration in seconds (15-180) or 'auto'",
     )
 
     parser.add_argument(
         "--upload",
         action="store_true",
-        help="Enable YouTube upload for this run (overrides ENABLE_UPLOAD)",
+        help="Enable video upload (YouTube, Facebook) for this run (overrides ENABLE_UPLOAD)",
     )
     parser.add_argument(
         "--batch",
@@ -733,24 +772,42 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
 
-    batch_count = max(1, args.batch)
-    results = []
-    for run_idx in range(batch_count):
-        if batch_count > 1:
-            print(f"\n==========================================")
-            print(f"   BATCH RUN {run_idx + 1} OF {batch_count}")
-            print(f"==========================================")
-        res = create_and_upload(
-            auto_accept=args.auto,
-            cli_ratio=args.ratio,
-            reset_ratio=args.reset_ratio,
-            character_override=args.character,
-            duration_override=args.duration,
-            no_menu=args.no_menu,
-            enable_upload_override=args.upload,
-        )
-        results.append(res)
-    return results[0] if len(results) == 1 else results
+    from pipeline.server_control import ensure_server_started, ensure_server_stopped
+
+    if not ensure_server_started():
+        print("[IndicF5] Error: Could not start or connect to IndicF5 server. Aborting video generation.")
+        return None
+
+    try:
+        mode_arg = args.mode
+        duration_arg = args.duration
+        if args.auto:
+            if mode_arg is None:
+                mode_arg = "auto"
+            if duration_arg is None:
+                duration_arg = "auto"
+
+        batch_count = max(1, args.batch)
+        results = []
+        for run_idx in range(batch_count):
+            if batch_count > 1:
+                print(f"\n==========================================")
+                print(f"   BATCH RUN {run_idx + 1} OF {batch_count}")
+                print(f"==========================================")
+            res = create_and_upload(
+                auto_accept=args.auto,
+                cli_ratio=args.ratio,
+                reset_ratio=args.reset_ratio,
+                character_override=args.character,
+                duration_override=duration_arg,
+                mode_override=mode_arg,
+                no_menu=args.no_menu,
+                enable_upload_override=args.upload,
+            )
+            results.append(res)
+        return results[0] if len(results) == 1 else results
+    finally:
+        ensure_server_stopped()
 
 
 if __name__ == "__main__":

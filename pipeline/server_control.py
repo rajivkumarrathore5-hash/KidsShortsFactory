@@ -5,6 +5,8 @@ from pathlib import Path
 import requests
 
 from config import (
+    INDICF5_AUTO_START,
+    INDICF5_AUTO_STOP,
     INDICF5_SERVER_DIR,
     INDICF5_SERVER_PYTHON,
     INDICF5_SERVER_SCRIPT,
@@ -15,7 +17,8 @@ from config import (
 SERVER_URL = INDICF5_SERVER_URL.rstrip("/")
 HEALTH_URL = f"{SERVER_URL}/health"
 SHUTDOWN_URL = f"{SERVER_URL}/shutdown"
-STARTUP_TIMEOUT_SECONDS = 300
+STARTUP_TIMEOUT_SECONDS = 90
+POLL_INTERVAL_SECONDS = 3
 _SERVER_PROCESS = None
 
 
@@ -30,10 +33,10 @@ def is_server_running():
         return False
 
 
-def start_server(timeout=STARTUP_TIMEOUT_SECONDS):
+def start_server(timeout=STARTUP_TIMEOUT_SECONDS, poll_interval=POLL_INTERVAL_SECONDS):
     global _SERVER_PROCESS
     if is_server_running():
-        print(f"IndicF5 server already running at {SERVER_URL}")
+        print("[IndicF5] Server already running.")
         return _SERVER_PROCESS
 
     server_dir = Path(INDICF5_SERVER_DIR)
@@ -42,7 +45,7 @@ def start_server(timeout=STARTUP_TIMEOUT_SECONDS):
     if not server_script.is_file():
         raise FileNotFoundError(f"IndicF5 server script not found: {server_script}")
     if not server_python.is_file():
-        raise FileNotFoundError(f"Movie explainer venv Python not found: {server_python}")
+        raise FileNotFoundError(f"IndicF5 Python executable not found: {server_python}")
 
     log_path = server_dir / "indicf5_server.log"
     with log_path.open("a", encoding="utf-8") as log_file:
@@ -64,8 +67,9 @@ def start_server(timeout=STARTUP_TIMEOUT_SECONDS):
 
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
+        time.sleep(poll_interval)
         if is_server_running():
-            print(f"IndicF5 server is ready at {SERVER_URL}")
+            print("[IndicF5] Server started successfully.")
             return _SERVER_PROCESS
         if _SERVER_PROCESS.poll() is not None:
             try:
@@ -73,7 +77,6 @@ def start_server(timeout=STARTUP_TIMEOUT_SECONDS):
             except OSError:
                 details = "Server log could not be read."
             raise RuntimeError(f"IndicF5 server exited during startup.\n{details}")
-        time.sleep(1)
 
     raise TimeoutError(
         f"IndicF5 server did not become healthy within {timeout} seconds. "
@@ -86,11 +89,14 @@ def stop_server(timeout=15):
     if not is_server_running():
         if _SERVER_PROCESS and _SERVER_PROCESS.poll() is not None:
             _SERVER_PROCESS = None
-        print("IndicF5 server is not running.")
+        print("[IndicF5] Server stopped.")
         return False
 
-    response = requests.post(SHUTDOWN_URL, timeout=5)
-    response.raise_for_status()
+    try:
+        requests.post(SHUTDOWN_URL, timeout=5)
+    except Exception:
+        pass
+
     if _SERVER_PROCESS is not None:
         try:
             _SERVER_PROCESS.wait(timeout=timeout)
@@ -101,6 +107,32 @@ def stop_server(timeout=15):
     else:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline and is_server_running():
-            time.sleep(0.25)
-    print("IndicF5 server shutdown requested.")
+            time.sleep(0.5)
+
+    print("[IndicF5] Server stopped.")
     return True
+
+
+def ensure_server_started():
+    if not INDICF5_AUTO_START:
+        return True
+    if is_server_running():
+        print("[IndicF5] Server already running.")
+        return True
+    try:
+        start_server(timeout=90, poll_interval=3)
+        return True
+    except Exception as e:
+        print(f"[IndicF5] Error: Failed to start server: {e}")
+        return False
+
+
+def ensure_server_stopped():
+    if not INDICF5_AUTO_STOP:
+        return True
+    try:
+        stop_server(timeout=15)
+        return True
+    except Exception as e:
+        print(f"[IndicF5] Error stopping server: {e}")
+        return False

@@ -18,7 +18,12 @@ def upload_to_platforms(video_path, title=None, description=None, script=None, t
             from .facebook import graph_api as fb
         else:
             from .facebook import selenium_uploader as fb
-        results['facebook'] = fb.upload(video_path, title, description)
+        if FACEBOOK_PROVIDER == "graph_api":
+            results['facebook'] = fb.upload(
+                video_path, title=title, description=description, script=script, theme=theme, character=character
+            )
+        else:
+            results['facebook'] = fb.upload(video_path, title, description)
     if "instagram" in PLATFORMS:
         if INSTAGRAM_PROVIDER == "graph_api":
             from .instagram import graph_api as ig
