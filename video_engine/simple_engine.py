@@ -3,8 +3,16 @@ import os
 import random
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
+
+for stream in (sys.stdout, sys.stderr):
+    if hasattr(stream, "reconfigure"):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
 
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 import requests
@@ -772,8 +780,12 @@ def render_video(
         audio_filters.append(f"[{audio_label}]{','.join(audio_tail)}[audio]")
         print(f"[DEBUG] FFmpeg Audio Filter: {';'.join(audio_filters)}")
         filters.extend(audio_filters)
+
+        filter_script_path = temp_path / "filter_complex.txt"
+        filter_script_path.write_text(";\n".join(filters), encoding="utf-8")
+
         cmd.extend([
-            "-filter_complex", ";".join(filters),
+            "-filter_complex_script", str(filter_script_path),
             "-map", "[video]", "-map", "[audio]",
             "-c:v", "libx264", "-preset", "veryfast",
             "-c:a", "aac", "-b:a", "192k",
@@ -781,18 +793,18 @@ def render_video(
             "-t", f"{final_video_duration:.6f}", output_path,
         ])
 
-        print("   🎬 Rendering with FFmpeg...")
+        print("   [RENDER] Rendering base video with FFmpeg...")
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
-            print(f"   ❌ FFmpeg Error: {result.stderr}")
+            print(f"   [ERROR] FFmpeg Error: {result.stderr}")
             raise Exception(result.stderr)
         
-        print(f"   ✅ Video saved: {output_path}")
+        print(f"   [OK] Video saved: {output_path}")
         return output_path
         
     except Exception as e:
-        print(f"❌ Simple Engine Error: {e}")
+        print(f"[ERROR] Simple Engine Error: {e}")
         raise
     finally:
         if temporary_directory:

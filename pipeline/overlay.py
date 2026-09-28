@@ -179,27 +179,40 @@ def apply_overlays(input_video: str, output_video: str, config: dict = None) -> 
     last_layer = f"b{len(overlays)}"
     filter_complex_parts.append(f"[{last_layer}]format=yuv420p[outv]")
 
-    filter_complex_str = ";".join(filter_complex_parts)
+    filter_complex_str = ";\n".join(filter_complex_parts)
 
-    cmd.extend([
-        "-filter_complex", filter_complex_str,
-        "-map", "[outv]",
-        "-map", "0:a?",
-        "-t", f"{duration:.3f}",
-        "-c:v", "libx264",
-        "-preset", "medium",
-        "-crf", "20",
-        "-c:a", "copy",
-        str(output_video),
-    ])
-
+    import tempfile
+    temp_script = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8")
     try:
+        temp_script.write(filter_complex_str)
+        temp_script.close()
+
+        cmd.extend([
+            "-filter_complex_script", temp_script.name,
+            "-map", "[outv]",
+            "-map", "0:a?",
+            "-t", f"{duration:.3f}",
+            "-c:v", "libx264",
+            "-preset", "medium",
+            "-crf", "20",
+            "-c:a", "copy",
+            str(output_video),
+        ])
+
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         print(f"[OVERLAY] Successfully applied overlays -> {output_video}")
         return output_video
-    except subprocess.CalledProcessError as e:
-        err_msg = e.stderr.decode("utf-8", errors="replace") if e.stderr else str(e)
-        print(f"[ERROR] Failed to apply overlays: {err_msg}")
+    except Exception as e:
+        err_msg = str(e)
+        if isinstance(e, subprocess.CalledProcessError) and e.stderr:
+            err_msg = e.stderr.decode("utf-8", errors="replace")
+        print(f"[WARNING] Overlay application failed: {err_msg}. Falling back to base video.")
         if input_video != output_video and os.path.isfile(input_video):
             shutil.copy2(input_video, output_video)
         return output_video
+    finally:
+        try:
+            if os.path.exists(temp_script.name):
+                os.remove(temp_script.name)
+        except Exception:
+            pass
