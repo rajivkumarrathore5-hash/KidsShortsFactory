@@ -16,6 +16,7 @@ __pycache__/
 *.pyc
 *.tmp
 *.wav
+!input/*.wav
 *.mp4
 *.mp3
 *.boundaries.json
