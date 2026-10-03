@@ -498,7 +498,7 @@ def render_video(
                     "hook": ["dhol_energy.mp3", "tabla_bhakti.mp3"],
                     "setup": ["flute_soft.mp3", "sitar_calm.mp3"],
                     "story": ["sitar_calm.mp3", "tabla_bhakti.mp3"],
-                    "twist": ["dhol_energy.mp3", "tabla_bhakti1.mp3"],
+                    "twist": ["dhol_energy.mp3", "tabla_bhakti.mp3"],
                     "moral": ["flute_soft.mp3", "sitar_calm.mp3"],
                     "cta": ["flute_soft.mp3"],
                 }
@@ -534,7 +534,7 @@ def render_video(
                             "section": sec_tag,
                         }
                     )
-                    cmd.extend(["-ss", f"{off_val}", "-stream_loop", "-1", "-i", str(chosen_mp3)])
+                    cmd.extend(["-stream_loop", "-1", "-i", str(chosen_mp3)])
                     next_input_idx += 1
                     current_time += sc_dur
 
@@ -567,10 +567,7 @@ def render_video(
         music_index = None
         if use_music and not story_mode_music and selected_music_file:
             music_index = audio_index + 1
-            if music_offset > 0:
-                cmd.extend(["-ss", f"{music_offset}", "-stream_loop", "-1", "-i", str(selected_music_file)])
-            else:
-                cmd.extend(["-stream_loop", "-1", "-i", str(selected_music_file)])
+            cmd.extend(["-stream_loop", "-1", "-i", str(selected_music_file)])
 
         filters = []
         if len(rendered_clips) == 1:
@@ -750,25 +747,35 @@ def render_video(
                     lbl_m = f"sec_m_{idx_m}"
                     in_i = sec_info["input_idx"]
                     dur_m = sec_info["duration"]
+                    off_val = sec_info.get("offset", 0.0)
                     del_m = round(sec_info["start_time"] * 1000)
-                    fade_d = min(0.3, dur_m / 2.0)
-                    filters.append(
-                        f"[{in_i}:a]atrim=0:{dur_m:.4f},"
+                    fade_d = min(0.4, dur_m / 3.0)
+                    audio_filters.append(
+                        f"[{in_i}:a]atrim=start={off_val:.3f}:duration={dur_m:.3f},"
                         f"afade=t=in:st=0:d={fade_d:.3f},"
-                        f"afade=t=out:st={max(0, dur_m - fade_d):.3f}:d={fade_d:.3f},"
+                        f"afade=t=out:st={max(0.0, dur_m - fade_d):.3f}:d={fade_d:.3f},"
                         f"adelay={del_m}:all=1[{lbl_m}]"
                     )
                     sec_labels.append(f"[{lbl_m}]")
                 
-                filters.append(
-                    f"{''.join(sec_labels)}amix=inputs={len(sec_labels)}:duration=first:dropout_transition=1[story_bg_raw]"
+                audio_filters.append(
+                    f"{''.join(sec_labels)}amix=inputs={len(sec_labels)}:duration=longest:dropout_transition=0:normalize=0[story_bg_raw]"
                 )
-                filters.append(f"[story_bg_raw]volume={final_volume:.2f}[music]")
+                audio_filters.append(f"[story_bg_raw]volume={final_volume:.2f}[music]")
             else:
-                audio_filters.append(f"[{music_index}:a]volume={final_volume:.2f}[music]")
+                fade_out_st = max(0.0, final_video_duration - 1.0)
+                audio_filters.append(
+                    f"[{music_index}:a]atrim=start={music_offset:.3f}:duration={final_video_duration:.3f},"
+                    f"afade=t=in:st=0:d=0.5,"
+                    f"afade=t=out:st={fade_out_st:.3f}:d=1.0,"
+                    f"volume={final_volume:.2f}[music]"
+                )
 
             audio_filters.append(
-                f"[{voice_label}][music]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[mixed]"
+                f"[{voice_label}][music]amix=inputs=2:duration=longest:dropout_transition=0:normalize=0[mixed_raw]"
+            )
+            audio_filters.append(
+                f"[mixed_raw]atrim=0:{final_video_duration:.6f}[mixed]"
             )
             audio_label = "mixed"
         else:

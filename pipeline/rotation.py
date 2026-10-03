@@ -11,7 +11,7 @@ def resolve_video_mode(selected_mode: str, config_state: dict = None) -> str:
     Resolves the active video mode. If selected_mode is 'auto',
     alternates between 'short' and 'story' based on last_video_mode.
     """
-    state = config_state if config_state is not None else load_config_state()
+    state = load_config_state() if config_state is None else {**load_config_state(), **config_state}
     mode_str = str(selected_mode or "auto").strip().lower()
 
     if mode_str == "auto":
@@ -24,13 +24,11 @@ def resolve_video_mode(selected_mode: str, config_state: dict = None) -> str:
             next_mode = "short"
 
         print(f"[MODE] Auto rotation enabled: last={last_mode or 'none'} -> next={next_mode}")
-        state["last_video_mode"] = next_mode
-        _persist_config_state(state)
+        _persist_config_state({"last_video_mode": next_mode})
         return next_mode
     else:
         chosen_mode = "story" if mode_str == "story" else "short"
-        state["last_video_mode"] = chosen_mode
-        _persist_config_state(state)
+        _persist_config_state({"last_video_mode": chosen_mode})
         return chosen_mode
 
 
@@ -39,7 +37,7 @@ def resolve_duration(selected_duration, current_mode: str, config_state: dict = 
     Resolves the video duration in seconds. If selected_duration is 'auto',
     rotates through preset durations based on the active mode (short / story).
     """
-    state = config_state if config_state is not None else load_config_state()
+    state = load_config_state() if config_state is None else {**load_config_state(), **config_state}
     is_auto = False
     if selected_duration is None or str(selected_duration).strip().lower() == "auto":
         is_auto = True
@@ -64,8 +62,7 @@ def resolve_duration(selected_duration, current_mode: str, config_state: dict = 
             next_dur = presets[0]
 
         print(f"[DURATION] Auto rotation enabled: last={last_dur if last_dur is not None else 'none'} -> next={next_dur}")
-        state["last_duration"] = next_dur
-        _persist_config_state(state)
+        _persist_config_state({"last_duration": next_dur})
         return next_dur
     else:
         try:
@@ -73,15 +70,14 @@ def resolve_duration(selected_duration, current_mode: str, config_state: dict = 
         except (ValueError, TypeError):
             dur = presets[0]
 
-        state["last_duration"] = dur
-        _persist_config_state(state)
+        _persist_config_state({"last_duration": dur})
         return dur
 
 
-def _persist_config_state(state: dict):
+def _persist_config_state(updates: dict):
     try:
         current_disk_state = load_config_state()
-        merged = {**current_disk_state, **state}
+        merged = {**current_disk_state, **updates}
         CONFIG_STATE_PATH.write_text(json.dumps(merged, indent=2), encoding="utf-8")
     except Exception as e:
         print(f"[WARNING] Could not save rotation state to config_state.json: {e}")

@@ -19,6 +19,18 @@ CAPTION_STYLES = [
 ]
 
 
+def parse_bool(val, default=True):
+    if val is None:
+        return default
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, (int, float)):
+        return bool(val)
+    if isinstance(val, str):
+        return val.strip().lower() in ("1", "true", "yes", "on", "y")
+    return bool(val)
+
+
 def load_config_state():
     if CONFIG_STATE_PATH.is_file():
         try:
@@ -53,25 +65,47 @@ def save_config_state(settings: dict):
         except (ValueError, TypeError):
             dur_val = "auto"
 
-    overlay_enabled = bool(settings.get("overlay_enabled", True))
+    overlay_enabled = parse_bool(settings.get("overlay_enabled", True), True)
     try:
         overlay_transparency = int(settings.get("overlay_transparency", 50))
     except (ValueError, TypeError):
         overlay_transparency = 50
 
+    try:
+        brightness_val = int(settings.get("brightness", 0))
+    except (ValueError, TypeError):
+        brightness_val = 0
+
+    try:
+        contrast_val = int(settings.get("contrast", 0))
+    except (ValueError, TypeError):
+        contrast_val = 0
+
+    try:
+        speed_val = float(settings.get("indicf5_speed", 1.25))
+    except (ValueError, TypeError):
+        speed_val = 1.25
+
     state_data = {
         **existing_state,
         "video_mode": video_mode,
-        "aspect_ratio": settings.get("aspect_ratio", "9:16"),
+        "aspect_ratio": str(settings.get("aspect_ratio", "9:16")),
         "duration": dur_val,
+        "duration_target": dur_val,
         "music_volume": round(music_vol, 2),
-        "tts_rate": settings.get("tts_rate", "+0%"),
-        "tts_pitch": settings.get("tts_pitch", "+0Hz"),
-        "caption_style": settings.get("caption_style", "bottom_bold"),
-        "brightness": int(settings.get("brightness", 0)),
-        "contrast": int(settings.get("contrast", 0)),
+        "tts_rate": str(settings.get("tts_rate", "+0%")),
+        "tts_pitch": str(settings.get("tts_pitch", "+0Hz")),
+        "indicf5_speed": round(speed_val, 2),
+        "caption_style": str(settings.get("caption_style", "bottom_bold")),
+        "brightness": brightness_val,
+        "contrast": contrast_val,
         "overlay_enabled": overlay_enabled,
         "overlay_transparency": overlay_transparency,
+        "visual_source": str(settings.get("visual_source", "ai")),
+        "image_provider": str(settings.get("image_provider", "agnes")),
+        "background_music": parse_bool(settings.get("background_music", True), True),
+        "dynamic_music": parse_bool(settings.get("dynamic_music", True), True),
+        "ken_burns_enabled": parse_bool(settings.get("ken_burns_enabled", True), True),
         "last_updated": datetime.now().isoformat(timespec="seconds"),
     }
     try:
@@ -89,14 +123,17 @@ def show_settings_menu(current_settings: dict) -> dict:
         aspect_ratio = settings.get("aspect_ratio", "9:16")
         duration = settings.get("duration", settings.get("duration_target", "auto"))
         duration_display = f"{duration} sec" if str(duration).isdigit() else str(duration)
-        music_vol = float(settings.get("music_volume", 0.15))
+        try:
+            music_vol = float(settings.get("music_volume", 0.15))
+        except (ValueError, TypeError):
+            music_vol = 0.15
         music_pct = int(round(music_vol * 100))
         tts_rate = settings.get("tts_rate", "+0%")
         tts_pitch = settings.get("tts_pitch", "+0Hz")
         caption_style = settings.get("caption_style", "bottom_bold")
         brightness = int(settings.get("brightness", 0))
         contrast = int(settings.get("contrast", 0))
-        overlay_enabled = bool(settings.get("overlay_enabled", True))
+        overlay_enabled = parse_bool(settings.get("overlay_enabled", True), True)
         overlay_transparency = int(settings.get("overlay_transparency", 50))
         overlay_display = f"Enabled ({overlay_transparency}%)" if overlay_enabled else "Disabled"
 
@@ -107,7 +144,7 @@ def show_settings_menu(current_settings: dict) -> dict:
         print(f"[2] Aspect Ratio          : {aspect_ratio}")
         print(f"[3] Duration              : {duration_display}")
         print(f"[4] Background Music Vol  : {music_pct}% ({music_vol:.2f})")
-        print(f"[5] TTS Rate              : {tts_rate}")
+        print(f"[5] TTS Rate / Speed      : {tts_rate}")
         print(f"[6] TTS Pitch             : {tts_pitch}")
         print(f"[7] Caption Style         : {caption_style}")
         print(f"[8] Brightness            : {brightness}%")
@@ -134,12 +171,15 @@ def show_settings_menu(current_settings: dict) -> dict:
             if val in ("1", "short"):
                 settings["video_mode"] = "short"
                 print("[OK] Video Mode set to 'short'")
+                save_config_state(settings)
             elif val in ("2", "story"):
                 settings["video_mode"] = "story"
                 print("[OK] Video Mode set to 'story'")
+                save_config_state(settings)
             elif val in ("3", "auto"):
                 settings["video_mode"] = "auto"
                 print("[OK] Video Mode set to 'auto'")
+                save_config_state(settings)
             else:
                 print("[ERROR] Invalid choice. Select 1, 2, or 3.")
 
@@ -148,6 +188,7 @@ def show_settings_menu(current_settings: dict) -> dict:
             if re.fullmatch(r"\d+:\d+", val):
                 settings["aspect_ratio"] = val
                 print(f"[OK] Aspect Ratio set to {val}")
+                save_config_state(settings)
             else:
                 print("[ERROR] Invalid aspect ratio format.")
 
@@ -163,12 +204,14 @@ def show_settings_menu(current_settings: dict) -> dict:
                     settings["duration"] = dur
                     settings["duration_target"] = dur
                     print(f"[OK] Duration set to {dur} sec")
+                    save_config_state(settings)
                 else:
                     print("[ERROR] Invalid duration. Enter an integer between 15 and 180.")
             elif opt in ("2", "auto"):
                 settings["duration"] = "auto"
                 settings["duration_target"] = "auto"
                 print("[OK] Duration set to 'auto'")
+                save_config_state(settings)
             else:
                 print("[ERROR] Invalid choice. Select 1 or 2.")
 
@@ -180,26 +223,46 @@ def show_settings_menu(current_settings: dict) -> dict:
                     vol = round(pct / 100.0, 2)
                     settings["music_volume"] = vol
                     print(f"[OK] Background Music Volume set to {int(pct)}% ({vol})")
+                    save_config_state(settings)
                 else:
                     print("[ERROR] Volume percentage must be between 0 and 100.")
             except ValueError:
                 print("[ERROR] Invalid percentage input.")
 
         elif choice == "5":
-            val = input("Enter TTS Rate (e.g. +0%, +10%, -5%): ").strip()
-            if re.fullmatch(r"[+-]\d+%", val):
-                settings["tts_rate"] = val
-                print(f"[OK] TTS Rate set to {val}")
-            else:
-                print("[ERROR] Invalid TTS rate format. Use signed percentage like +0% or +10%.")
+            val = input("Enter TTS Rate (e.g. +0%, +10%, -5%, or 10): ").strip()
+            if val:
+                # Normalize rate format
+                if re.fullmatch(r"[+-]?\d+%", val):
+                    rate_val = val if val.startswith(("+", "-")) else f"+{val}"
+                elif re.fullmatch(r"[+-]?\d+", val):
+                    rate_val = f"{val}%" if val.startswith(("+", "-")) else f"+{val}%"
+                else:
+                    rate_val = None
+
+                if rate_val:
+                    settings["tts_rate"] = rate_val
+                    print(f"[OK] TTS Rate set to {rate_val}")
+                    save_config_state(settings)
+                else:
+                    print("[ERROR] Invalid TTS rate format. Use e.g. +0%, +10%, or -5%.")
 
         elif choice == "6":
-            val = input("Enter TTS Pitch (e.g. +0Hz, +2Hz, -2Hz): ").strip()
-            if re.fullmatch(r"[+-]\d+Hz", val):
-                settings["tts_pitch"] = val
-                print(f"[OK] TTS Pitch set to {val}")
-            else:
-                print("[ERROR] Invalid TTS pitch format. Use signed Hz like +0Hz or +2Hz.")
+            val = input("Enter TTS Pitch (e.g. +0Hz, +2Hz, -2Hz, or 2): ").strip()
+            if val:
+                if re.fullmatch(r"[+-]?\d+Hz", val, re.IGNORECASE):
+                    pitch_val = val.upper() if val.startswith(("+", "-")) else f"+{val.upper()}"
+                elif re.fullmatch(r"[+-]?\d+", val):
+                    pitch_val = f"{val}Hz" if val.startswith(("+", "-")) else f"+{val}Hz"
+                else:
+                    pitch_val = None
+
+                if pitch_val:
+                    settings["tts_pitch"] = pitch_val
+                    print(f"[OK] TTS Pitch set to {pitch_val}")
+                    save_config_state(settings)
+                else:
+                    print("[ERROR] Invalid TTS pitch format. Use e.g. +0Hz or +2Hz.")
 
         elif choice == "7":
             print("\nSelect Caption Style:")
@@ -218,9 +281,11 @@ def show_settings_menu(current_settings: dict) -> dict:
                 selected = CAPTION_STYLES[int(val) - 1]
                 settings["caption_style"] = selected
                 print(f"[OK] Caption Style set to '{selected}'")
+                save_config_state(settings)
             elif val in CAPTION_STYLES:
                 settings["caption_style"] = val
                 print(f"[OK] Caption Style set to '{val}'")
+                save_config_state(settings)
             else:
                 print("[ERROR] Invalid style selection.")
 
@@ -231,6 +296,7 @@ def show_settings_menu(current_settings: dict) -> dict:
                 if -50 <= b_val <= 50:
                     settings["brightness"] = b_val
                     print(f"[OK] Brightness set to {b_val}%")
+                    save_config_state(settings)
                 else:
                     print("[ERROR] Brightness must be between -50% and +50%.")
             except ValueError:
@@ -243,6 +309,7 @@ def show_settings_menu(current_settings: dict) -> dict:
                 if -50 <= c_val <= 50:
                     settings["contrast"] = c_val
                     print(f"[OK] Contrast set to {c_val}%")
+                    save_config_state(settings)
                 else:
                     print("[ERROR] Contrast must be between -50% and +50%.")
             except ValueError:
@@ -251,6 +318,7 @@ def show_settings_menu(current_settings: dict) -> dict:
         elif choice == "10":
             from pipeline.overlay import ask_overlay_settings
             settings = ask_overlay_settings(settings)
+            save_config_state(settings)
 
         else:
             print("[ERROR] Please select 1-10 or press Enter.")

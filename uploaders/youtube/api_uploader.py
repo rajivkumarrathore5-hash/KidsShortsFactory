@@ -252,7 +252,8 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
 
     # Save next_publish_time and upload_history to config_state.json
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    upload_history = config_state.get("upload_history", [])
+    current_disk_state = load_config_state()
+    upload_history = current_disk_state.get("upload_history", [])
     upload_history.append({
         "video_id": video_id,
         "uploaded_at": now_iso,
@@ -260,12 +261,12 @@ def upload(video_path, title=None, description=None, script=None, theme=None, ch
         "publish_at_local": publish_at_local.strftime("%d/%m/%Y %I:%M %p"),
     })
 
-    config_state["next_publish_time"] = next_slot_str
-    config_state["upload_history"] = upload_history
+    current_disk_state["next_publish_time"] = next_slot_str
+    current_disk_state["upload_history"] = upload_history
 
     try:
         import json
-        CONFIG_STATE_PATH.write_text(json.dumps(config_state, indent=2), encoding="utf-8")
+        CONFIG_STATE_PATH.write_text(json.dumps(current_disk_state, indent=2), encoding="utf-8")
         print(f"[SCHEDULE] Next publish time updated to: {next_slot_str}")
     except Exception as e:
         print(f"[WARNING] Could not update config_state.json after upload: {e}")

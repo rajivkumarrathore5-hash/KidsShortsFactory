@@ -25,17 +25,18 @@ def _resolve_page_credentials():
     if not page_id or page_id == "6159861104121":
         page_id = bhakti_beats_page_id
 
-    # Try quick check on the page endpoint
+    # Try quick check on the page endpoint with access_token field
     try:
         check_url = f"https://graph.facebook.com/v20.0/{page_id}"
         resp = requests.get(
             check_url,
-            params={"fields": "id,name", "access_token": page_token},
-            timeout=10,
+            params={"fields": "id,name,access_token", "access_token": page_token},
+            timeout=15,
         )
         if resp.status_code == 200:
             data = resp.json()
-            return data.get("id", page_id), page_token, data.get("name", page_name)
+            actual_page_token = data.get("access_token") or page_token
+            return data.get("id", page_id), actual_page_token, data.get("name", page_name)
     except Exception:
         pass
 
@@ -45,14 +46,14 @@ def _resolve_page_credentials():
         resp = requests.get(
             accounts_url,
             params={"access_token": page_token},
-            timeout=10,
+            timeout=15,
         )
         if resp.status_code == 200:
             accounts = resp.json().get("data", [])
             # Search for Bhakti Beats or matching page_id
             for acc in accounts:
                 if acc.get("id") == page_id or "bhakti beats" in acc.get("name", "").lower():
-                    return acc["id"], acc["access_token"], acc.get("name", page_name)
+                    return acc["id"], acc.get("access_token", page_token), acc.get("name", page_name)
     except Exception:
         pass
 

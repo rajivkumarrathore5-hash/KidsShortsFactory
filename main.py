@@ -260,7 +260,7 @@ def _select_dynamic_job(settings, character_override=None, duration_override=Non
     scene_count = calculate_scene_count(duration, video_mode=video_mode)
 
     image_seed = random.randint(0, 2**31 - 1) if AI_IMAGE_SEED_PER_VIDEO else None
-    indicf5_speed = INDICF5_SPEED
+    indicf5_speed = float(settings.get("indicf5_speed", INDICF5_SPEED))
     settings.update(
         {
             "theme_config": theme_config,
@@ -316,6 +316,15 @@ def _render_video(script, settings):
 
 
     def synthesize_voiceover():
+        base_speed = float(settings.get("indicf5_speed", INDICF5_SPEED))
+        rate_str = str(settings.get("tts_rate", "+0%")).strip()
+        speed_mult = 1.0
+        match = re.fullmatch(r"([+-]?\d+)%", rate_str)
+        if match:
+            pct = int(match.group(1))
+            speed_mult = max(0.5, 1.0 + (pct / 100.0))
+        effective_speed = min(2.0, max(0.5, base_speed * speed_mult))
+
         tts_func = get_tts(
             provider="indicf5",
             voice=settings["tts_voice"],
@@ -323,7 +332,7 @@ def _render_video(script, settings):
             rate=settings["tts_rate"],
             ref_audio_path=settings["indicf5_reference_audio"],
             ref_text_path=settings["indicf5_reference_text"],
-            speed=settings["indicf5_speed"],
+            speed=effective_speed,
         )
         tts_func(narration_text, audio_path)
         return get_audio_duration(audio_path)
@@ -575,6 +584,8 @@ def create_and_upload(
     settings = _default_settings()
     settings["effects"] = effects
 
+    from pipeline.pre_run_settings import parse_bool
+
     # Load from config_state.json if available
     saved_state = load_config_state()
     if saved_state:
@@ -611,6 +622,12 @@ def create_and_upload(
         if "tts_pitch" in saved_state:
             settings["tts_pitch"] = str(saved_state["tts_pitch"])
             print(f"[INFO] TTS Pitch: {settings['tts_pitch']} (from saved state)")
+        if "indicf5_speed" in saved_state:
+            try:
+                settings["indicf5_speed"] = float(saved_state["indicf5_speed"])
+                print(f"[INFO] IndicF5 Speed: {settings['indicf5_speed']} (from saved state)")
+            except (ValueError, TypeError):
+                pass
         if "caption_style" in saved_state:
             settings["caption_style"] = str(saved_state["caption_style"])
             print(f"[INFO] Caption Style: {settings['caption_style']} (from saved state)")
@@ -629,7 +646,7 @@ def create_and_upload(
             except (ValueError, TypeError):
                 pass
         if "overlay_enabled" in saved_state:
-            settings["overlay_enabled"] = bool(saved_state["overlay_enabled"])
+            settings["overlay_enabled"] = parse_bool(saved_state["overlay_enabled"], True)
             print(f"[INFO] Overlay Enabled: {settings['overlay_enabled']} (from saved state)")
         if "overlay_transparency" in saved_state:
             try:
@@ -637,6 +654,17 @@ def create_and_upload(
                 print(f"[INFO] Overlay Transparency: {settings['overlay_transparency']}% (from saved state)")
             except (ValueError, TypeError):
                 pass
+        if "visual_source" in saved_state:
+            settings["visual_source"] = str(saved_state["visual_source"])
+        if "image_provider" in saved_state:
+            settings["image_provider"] = str(saved_state["image_provider"])
+            settings["ai_image_provider"] = str(saved_state["image_provider"])
+        if "background_music" in saved_state:
+            settings["background_music"] = parse_bool(saved_state["background_music"], True)
+        if "dynamic_music" in saved_state:
+            settings["dynamic_music"] = parse_bool(saved_state["dynamic_music"], True)
+        if "ken_burns_enabled" in saved_state:
+            settings["ken_burns_enabled"] = parse_bool(saved_state["ken_burns_enabled"], True)
 
     # Force TTS provider to indicf5
     settings["tts_provider"] = "indicf5"
@@ -646,7 +674,7 @@ def create_and_upload(
         settings["aspect_ratio"] = ASPECT_RATIO or "9:16"
         print(f"[INFO] Aspect ratio reset to .env default: {settings['aspect_ratio']}")
 
-    # Apply CLI flag overrides (taking priority)
+    # Apply CLI flag overrides (taking priority only when explicitly provided)
     if cli_ratio:
         settings["aspect_ratio"] = cli_ratio.strip()
         print(f"[INFO] Aspect Ratio CLI override: {settings['aspect_ratio']}")
@@ -662,28 +690,31 @@ def create_and_upload(
             settings["duration_target"] = int(duration_override)
         print(f"[INFO] Duration CLI override: {settings['duration_target']}")
 
-    # Show menu unless --no-menu flag is passed
+    # Show menu unless no_menu flag is passed
     if no_menu:
         save_config_state(settings)
     else:
         settings = show_settings_menu(settings)
 
+    # Save finalized user settings so they are remembered across runs
+    save_config_state(settings)
+
     # Auto mode and duration rotation resolution
     from pipeline.rotation import resolve_video_mode, resolve_duration
 
-    resolved_mode = resolve_video_mode(settings.get("video_mode", "auto"), saved_state)
+    resolved_mode = resolve_video_mode(settings.get("video_mode", "auto"))
     settings["video_mode"] = resolved_mode
 
     resolved_duration = resolve_duration(
         settings.get("duration", settings.get("duration_target", "auto")),
         resolved_mode,
-        saved_state,
     )
     settings["duration"] = resolved_duration
     settings["duration_target"] = resolved_duration
 
     effects["brightness"] = settings.get("brightness", 0)
     effects["contrast"] = settings.get("contrast", 0)
+    effects["caption_style"] = settings.get("caption_style", "bottom_bold")
     settings["effects"] = effects
 
     settings = _merge_settings(settings)
@@ -806,11 +837,7 @@ def main(argv=None):
     try:
         mode_arg = args.mode
         duration_arg = args.duration
-        if args.auto:
-            if mode_arg is None:
-                mode_arg = "auto"
-            if duration_arg is None:
-                duration_arg = "auto"
+        no_menu_flag = args.no_menu or args.auto
 
         batch_count = max(1, args.batch)
         results = []
@@ -826,7 +853,7 @@ def main(argv=None):
                 character_override=args.character,
                 duration_override=duration_arg,
                 mode_override=mode_arg,
-                no_menu=args.no_menu,
+                no_menu=no_menu_flag,
                 enable_upload_override=args.upload,
             )
             results.append(res)

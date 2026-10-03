@@ -1,5 +1,8 @@
 @echo off
 setlocal
+chcp 65001 >nul
+set "PYTHONIOENCODING=utf-8"
+set "PYTHONUTF8=1"
 set "PROJECT_DIR=%~dp0"
 set "PYTHON_EXE=%PROJECT_DIR%.venv\Scripts\python.exe"
 

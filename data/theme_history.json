@@ -1,82 +1,82 @@
 [
   {
-    "id": "jagannath_puri_temple",
-    "group": "Jagannath",
-    "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
-    "music_track": "aarti_bells.mp3",
-    "duration": 90,
-    "selected_at": "2026-09-27T23:45:17"
-  },
-  {
-    "id": "hanuman_sundarkand",
-    "group": "Hanuman",
-    "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
-    "music_track": "dhol_energy.mp3",
-    "duration": 28,
-    "selected_at": "2026-09-28T10:19:05"
-  },
-  {
-    "id": "shiv_ganga",
-    "group": "Shiv-Parvati",
-    "visual_style": "stylized 3D animated family-film look, expressive faces, colorful vertical composition",
-    "music_track": "sitar_calm.mp3",
-    "duration": 28,
-    "selected_at": "2026-09-28T10:35:10"
-  },
-  {
-    "id": "durga_lion",
-    "group": "Durga-Kali",
+    "id": "vitthal_wari_yatra",
+    "group": "Vitthal",
     "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
     "music_track": "tabla_bhakti.mp3",
-    "duration": 28,
-    "selected_at": "2026-09-28T11:04:23"
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
   },
   {
-    "id": "krishna_sudama_friendship",
-    "group": "Krishna",
+    "id": "vaishno_devi_trikuta",
+    "group": "Vaishno Devi",
     "visual_style": "hyperrealistic devotional art, dramatic lighting, detailed vertical composition",
-    "music_track": "flute_soft.mp3",
-    "duration": 120,
-    "selected_at": "2026-09-28T11:23:10"
+    "music_track": "tabla_bhakti.mp3",
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
   },
   {
-    "id": "lakshmi_diwali",
-    "group": "Lakshmi",
+    "id": "hanuman_sanjeevani_parvat",
+    "group": "Hanuman",
     "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
-    "music_track": "aarti_bells.mp3",
-    "duration": 15,
-    "selected_at": "2026-09-28T11:43:44"
-  },
-  {
-    "id": "jagannath_rath_yatra",
-    "group": "Jagannath",
-    "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
     "music_track": "dhol_energy.mp3",
-    "duration": 60,
-    "selected_at": "2026-09-28T11:55:10"
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
   },
   {
-    "id": "mandir_morning",
+    "id": "radha_krishna_raas",
+    "group": "Krishna",
+    "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
+    "music_track": "flute_soft.mp3",
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
+  },
+  {
+    "id": "ram_ahilya_uddhar",
+    "group": "Ram-Sita",
+    "visual_style": "stylized 3D animated family-film look, expressive faces, colorful vertical composition",
+    "music_track": "sitar_calm.mp3",
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
+  },
+  {
+    "id": "shani_dev_nyay_karm",
+    "group": "Shani Dev",
+    "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
+    "music_track": "dhol_energy.mp3",
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
+  },
+  {
+    "id": "sandhya_aarti_together",
     "group": "General devotional",
-    "visual_style": "stylized 3D animated family-film look, expressive faces, colorful vertical composition",
-    "music_track": "sitar_calm.mp3",
-    "duration": 120,
-    "selected_at": "2026-09-28T14:30:43"
-  },
-  {
-    "id": "ram_hanuman_meet",
-    "group": "Hanuman",
-    "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
-    "music_track": "tabla_bhakti.mp3",
-    "duration": 120,
-    "selected_at": "2026-09-28T14:47:00"
-  },
-  {
-    "id": "bal_krishna_makhan",
-    "group": "Krishna",
     "visual_style": "hyperrealistic devotional art, dramatic lighting, detailed vertical composition",
+    "music_track": "tabla_bhakti.mp3",
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
+  },
+  {
+    "id": "saraswati_vidya_gyaan",
+    "group": "Saraswati",
+    "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
+    "music_track": "sitar_calm.mp3",
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
+  },
+  {
+    "id": "jagannath_puri_temple_prem",
+    "group": "Jagannath",
+    "visual_style": "soft watercolor devotional illustration, delicate paper texture, vertical composition",
     "music_track": "flute_soft.mp3",
-    "duration": 120,
-    "selected_at": "2026-09-28T15:14:24"
+    "duration": null,
+    "selected_at": "2026-10-03T17:31:40"
+  },
+  {
+    "id": "krishna_sudama_mitrata",
+    "group": "Krishna",
+    "visual_style": "stylized 3D animated family-film look, expressive faces, colorful vertical composition",
+    "music_track": "flute_soft.mp3",
+    "duration": 60,
+    "selected_at": "2026-10-03T17:34:34"
   }
 ]

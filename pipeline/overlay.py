@@ -5,6 +5,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from pipeline.pre_run_settings import parse_bool
+
 OVERLAYS_DIR = Path(__file__).resolve().parent.parent / "assets" / "overlays"
 
 
@@ -15,8 +17,11 @@ def ask_overlay_settings(settings: dict) -> dict:
     print("\n==========================================")
     print("         🎨 OVERLAY SETTINGS              ")
     print("==========================================")
-    current_enabled = settings.get("overlay_enabled", True)
-    current_trans = int(settings.get("overlay_transparency", 50))
+    current_enabled = parse_bool(settings.get("overlay_enabled", True), True)
+    try:
+        current_trans = int(settings.get("overlay_transparency", 50))
+    except (ValueError, TypeError):
+        current_trans = 50
 
     prompt_default = "Y/n" if current_enabled else "y/N"
     val = input(f"Use overlays? [{prompt_default}]: ").strip().lower()
@@ -126,7 +131,7 @@ def apply_overlays(input_video: str, output_video: str, config: dict = None) -> 
     if config is None:
         config = {}
 
-    enabled = config.get("overlay_enabled", True)
+    enabled = parse_bool(config.get("overlay_enabled", True), True)
     if not enabled:
         if input_video != output_video:
             shutil.copy2(input_video, output_video)

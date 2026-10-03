@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -60,24 +61,49 @@ def _save_history(history):
             temporary_path.unlink()
 
 
+# Ordered (keywords, group) rules. Each god gets its own group so that every
+# god has an equal chance of being picked. Order matters for combined
+# characters (e.g. "Ram and Hanuman" -> Hanuman, "Shiv and Parvati" -> Shiv).
+GOD_GROUP_RULES = [
+    (("jagannath",), "Jagannath"),
+    (("khatu", "shyam"), "Khatu Shyam"),
+    (("hanuman",), "Hanuman"),
+    (("ganesh",), "Ganesh"),
+    (("kartikeya", "murugan"), "Kartikeya"),
+    (("mahakal",), "Mahakal"),
+    (("kedarnath",), "Kedarnath"),
+    (("mallikarjuna",), "Mallikarjuna"),
+    (("shiv",), "Shiv"),
+    (("parvati", "gauri"), "Parvati"),
+    (("durga",), "Durga"),
+    (("kali",), "Kali"),
+    (("chamundeshwari",), "Chamundeshwari"),
+    (("kamakhya",), "Kamakhya"),
+    (("meenakshi",), "Meenakshi"),
+    (("vaishno",), "Vaishno Devi"),
+    (("lakshmi",), "Lakshmi"),
+    (("saraswati",), "Saraswati"),
+    (("ganga",), "Ganga"),
+    (("narasimha",), "Narasimha"),
+    (("dashavatar",), "Dashavatar"),
+    (("vishnu",), "Vishnu"),
+    (("balaji", "venkateshwara", "tirupati"), "Tirupati Balaji"),
+    (("ram", "sita"), "Ram-Sita"),
+    (("krishna", "radha"), "Krishna"),
+    (("shani",), "Shani Dev"),
+    (("sai",), "Sai Baba"),
+    (("ayyappa",), "Ayyappa"),
+    (("vitthal", "vithoba"), "Vitthal"),
+    (("surya",), "Surya Dev"),
+    (("khandoba",), "Khandoba"),
+]
+
+
 def _theme_group(theme):
-    character = theme["character"].casefold()
-    if "jagannath" in character:
-        return "Jagannath"
-    if "hanuman" in character:
-        return "Hanuman"
-    if "ganesh" in character:
-        return "Ganesh"
-    if "shiv" in character or "parvati" in character:
-        return "Shiv-Parvati"
-    if "durga" in character or "kali" in character:
-        return "Durga-Kali"
-    if "lakshmi" in character:
-        return "Lakshmi"
-    if "ram" in character or "sita" in character:
-        return "Ram-Sita"
-    if "krishna" in character or "radha" in character:
-        return "Krishna"
+    words = set(re.findall(r"[a-z]+", theme["character"].casefold()))
+    for keywords, group in GOD_GROUP_RULES:
+        if any(keyword in words for keyword in keywords):
+            return group
     return "General devotional"
 
 
