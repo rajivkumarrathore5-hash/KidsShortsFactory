@@ -95,16 +95,24 @@
       <div class="form-group">
         <label class="form-label" for="duration-select">
           <span>⏱️ Target Duration</span>
+          <span id="duration-active-label" style="font-size:0.75rem; color:#38bdf8;">Up to 180s (3 Min)</span>
         </label>
         <select class="form-select" id="duration-select">
-          <option value="auto">🎲 Auto Dynamic</option>
+          <option value="auto">🎲 Auto Dynamic Rotation</option>
+          <option value="15">15s (Micro Short)</option>
           <option value="20">20s (Fast Short)</option>
           <option value="30">30s (Engaging Short)</option>
           <option value="45">45s (Detailed Short)</option>
-          <option value="60">60s (Story Mini)</option>
-          <option value="90">90s (Full Story)</option>
-          <option value="120">120s (Epic Story)</option>
+          <option value="60">60s (1 Min Story / Short)</option>
+          <option value="90">90s (1.5 Min Story)</option>
+          <option value="120">120s (2 Min Story)</option>
+          <option value="150">150s (2.5 Min Epic Story)</option>
+          <option value="180">180s (3 Min Max Shorts / Story)</option>
+          <option value="custom">✏️ Custom Duration (Seconds)</option>
         </select>
+        <div id="custom-duration-wrapper" style="display:none; margin-top:8px;">
+          <input type="number" id="custom-duration-input" class="form-input" placeholder="Enter duration in seconds (e.g. 75, 140, 180)" min="15" max="180" style="font-size:0.85rem; padding:8px 12px;">
+        </div>
       </div>
 
       <!-- TTS Voice & Speed Controls -->

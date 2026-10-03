@@ -90,6 +90,33 @@ function setupEventListeners() {
     });
   }
 
+  // Duration Select and Custom Duration Input
+  const durationSelect = document.getElementById('duration-select');
+  const customDurationWrapper = document.getElementById('custom-duration-wrapper');
+  const customDurationInput = document.getElementById('custom-duration-input');
+  const durationActiveLabel = document.getElementById('duration-active-label');
+
+  if (durationSelect) {
+    durationSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'custom') {
+        if (customDurationWrapper) customDurationWrapper.style.display = 'block';
+        if (customDurationInput) customDurationInput.focus();
+        if (durationActiveLabel) durationActiveLabel.textContent = customDurationInput.value ? `${customDurationInput.value}s (Custom)` : 'Custom Duration';
+      } else {
+        if (customDurationWrapper) customDurationWrapper.style.display = 'none';
+        if (durationActiveLabel) durationActiveLabel.textContent = e.target.value === 'auto' ? 'Auto Dynamic' : `${e.target.value}s`;
+      }
+    });
+  }
+
+  if (customDurationInput) {
+    customDurationInput.addEventListener('input', (e) => {
+      if (durationActiveLabel) {
+        durationActiveLabel.textContent = e.target.value ? `${e.target.value}s (Custom)` : 'Custom Duration';
+      }
+    });
+  }
+
   // Voice Speed Slider
   const speedSlider = document.getElementById('voice-speed-slider');
   const speedVal = document.getElementById('voice-speed-val');
@@ -265,8 +292,26 @@ async function loadInitialData() {
       }
     }
 
-    if (activeConfig.duration_target) {
-      document.getElementById('duration-select').value = String(activeConfig.duration_target);
+    if (activeConfig.duration_target || activeConfig.duration) {
+      const durVal = String(activeConfig.duration_target || activeConfig.duration).trim();
+      const standardDurations = ['auto', '15', '20', '30', '45', '60', '90', '120', '150', '180'];
+      if (standardDurations.includes(durVal)) {
+        document.getElementById('duration-select').value = durVal;
+        if (document.getElementById('custom-duration-wrapper')) {
+          document.getElementById('custom-duration-wrapper').style.display = 'none';
+        }
+      } else if (durVal) {
+        document.getElementById('duration-select').value = 'custom';
+        if (document.getElementById('custom-duration-wrapper')) {
+          document.getElementById('custom-duration-wrapper').style.display = 'block';
+        }
+        if (document.getElementById('custom-duration-input')) {
+          document.getElementById('custom-duration-input').value = durVal;
+        }
+        if (document.getElementById('duration-active-label')) {
+          document.getElementById('duration-active-label').textContent = `${durVal}s (Custom)`;
+        }
+      }
     }
 
     if (activeConfig.indicf5_speed) {
@@ -314,11 +359,18 @@ async function startGeneration({ autoUpload = false }) {
     }
   }
 
+  let selectedDuration = document.getElementById('duration-select').value;
+  if (selectedDuration === 'custom') {
+    const customDurInp = document.getElementById('custom-duration-input');
+    const parsedDur = customDurInp ? parseInt(customDurInp.value, 10) : 60;
+    selectedDuration = (parsedDur && !isNaN(parsedDur) && parsedDur >= 15 && parsedDur <= 180) ? String(parsedDur) : '60';
+  }
+
   const payload = {
     theme: document.getElementById('theme-select').value,
     video_mode: activeModeBtn ? activeModeBtn.dataset.mode : 'auto',
     aspect_ratio: selectedRatio,
-    duration: document.getElementById('duration-select').value,
+    duration: selectedDuration,
     indicf5_speed: parseFloat(document.getElementById('voice-speed-slider').value),
     overlay_enabled: document.getElementById('overlay-toggle').checked,
     overlay_transparency: parseInt(document.getElementById('overlay-opacity-slider').value, 10),
