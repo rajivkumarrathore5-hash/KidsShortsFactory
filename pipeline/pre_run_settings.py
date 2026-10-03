@@ -86,6 +86,11 @@ def save_config_state(settings: dict):
     except (ValueError, TypeError):
         speed_val = 1.25
 
+    try:
+        interval_val = float(settings.get("upload_interval_hours", existing_state.get("upload_interval_hours", 9.0)))
+    except (ValueError, TypeError):
+        interval_val = 9.0
+
     state_data = {
         **existing_state,
         "video_mode": video_mode,
@@ -106,6 +111,10 @@ def save_config_state(settings: dict):
         "background_music": parse_bool(settings.get("background_music", True), True),
         "dynamic_music": parse_bool(settings.get("dynamic_music", True), True),
         "ken_burns_enabled": parse_bool(settings.get("ken_burns_enabled", True), True),
+        "upload_interval_hours": round(interval_val, 2),
+        "last_upload_time": str(settings.get("last_upload_time", existing_state.get("last_upload_time", "Not uploaded yet"))),
+        "next_upload_time": str(settings.get("next_upload_time", existing_state.get("next_upload_time", "Auto (Calculate)"))),
+        "scheduler_enabled": parse_bool(settings.get("scheduler_enabled", existing_state.get("scheduler_enabled", False)), False),
         "last_updated": datetime.now().isoformat(timespec="seconds"),
     }
     try:

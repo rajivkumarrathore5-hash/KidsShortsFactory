@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   connectWebSocket();
   await loadInitialData();
+  await loadSchedulerData();
   await loadRecentGallery();
 });
 
@@ -130,6 +131,74 @@ function setupEventListeners() {
   opacitySlider.addEventListener('input', (e) => {
     opacityVal.textContent = `${e.target.value}%`;
   });
+
+  // Scheduler Interval Chips
+  const customIntervalWrapper = document.getElementById('custom-interval-wrapper');
+  const customIntervalInput = document.getElementById('custom-interval-input');
+  const intervalLabel = document.getElementById('interval-label');
+  const schedulerBadge = document.getElementById('scheduler-badge');
+
+  document.querySelectorAll('[data-interval]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      document.querySelectorAll('[data-interval]').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const val = btn.dataset.interval;
+
+      let intervalHours = 9.0;
+      if (val === 'custom') {
+        if (customIntervalWrapper) customIntervalWrapper.style.display = 'block';
+        if (customIntervalInput) {
+          customIntervalInput.focus();
+          intervalHours = parseFloat(customIntervalInput.value) || 9.0;
+        }
+        if (intervalLabel) intervalLabel.textContent = `Every ${intervalHours}h (Custom)`;
+        if (schedulerBadge) schedulerBadge.textContent = `Every ${intervalHours}h`;
+      } else {
+        if (customIntervalWrapper) customIntervalWrapper.style.display = 'none';
+        intervalHours = parseFloat(val);
+        if (intervalLabel) intervalLabel.textContent = `Every ${val}h`;
+        if (schedulerBadge) schedulerBadge.textContent = `Every ${val} Hours`;
+      }
+
+      await updateSchedulerConfig({ upload_interval_hours: intervalHours });
+    });
+  });
+
+  if (customIntervalInput) {
+    customIntervalInput.addEventListener('change', async (e) => {
+      const val = parseFloat(e.target.value);
+      if (val && val > 0) {
+        if (intervalLabel) intervalLabel.textContent = `Every ${val}h (Custom)`;
+        if (schedulerBadge) schedulerBadge.textContent = `Every ${val} Hours`;
+        await updateSchedulerConfig({ upload_interval_hours: val });
+      }
+    });
+  }
+
+  // Save Custom Next Upload Time
+  const btnSaveSchedule = document.getElementById('btn-save-schedule');
+  const customNextUploadPicker = document.getElementById('custom-next-upload-picker');
+  if (btnSaveSchedule && customNextUploadPicker) {
+    btnSaveSchedule.addEventListener('click', async () => {
+      const selectedVal = customNextUploadPicker.value;
+      if (!selectedVal) {
+        alert('Please select a date and time first!');
+        return;
+      }
+      const dt = new Date(selectedVal);
+      const formatted = dt.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      document.getElementById('display-next-upload').textContent = formatted;
+      await updateSchedulerConfig({ next_upload_time: formatted });
+      alert(`✅ Next Upload Time set to:\n${formatted}`);
+    });
+  }
 
   // Generate Video Button
   document.getElementById('btn-generate-video').addEventListener('click', () => {
@@ -535,3 +604,62 @@ window.playGalleryVideo = function (filename, fullPath) {
   videoPlayer.scrollIntoView({ behavior: 'smooth' });
   videoPlayer.play().catch(() => {});
 };
+
+// Load Scheduler Status & Timestamps from Server
+async function loadSchedulerData() {
+  try {
+    const res = await fetch('/api/scheduler');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const interval = data.upload_interval_hours || 9;
+    const lastUp = data.last_upload_time || 'Not uploaded yet';
+    const nextUp = data.next_upload_time || 'Calculating...';
+
+    const lastEl = document.getElementById('display-last-upload');
+    const nextEl = document.getElementById('display-next-upload');
+    const labelEl = document.getElementById('interval-label');
+    const badgeEl = document.getElementById('scheduler-badge');
+
+    if (lastEl) lastEl.textContent = lastUp;
+    if (nextEl) nextEl.textContent = nextUp;
+    if (labelEl) labelEl.textContent = `Every ${interval}h`;
+    if (badgeEl) badgeEl.textContent = `Every ${interval} Hours`;
+
+    let matched = false;
+    document.querySelectorAll('[data-interval]').forEach((btn) => {
+      if (btn.dataset.interval === String(interval)) {
+        btn.classList.add('active');
+        matched = true;
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    if (!matched) {
+      const customBtn = document.querySelector('[data-interval="custom"]');
+      if (customBtn) customBtn.classList.add('active');
+      const wrapper = document.getElementById('custom-interval-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+      const inp = document.getElementById('custom-interval-input');
+      if (inp) inp.value = interval;
+    }
+  } catch (err) {
+    console.error('Failed to load scheduler data:', err);
+  }
+}
+
+// Update Scheduler Configuration on Server
+async function updateSchedulerConfig(payload) {
+  try {
+    const res = await fetch('/api/scheduler', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      await loadSchedulerData();
+    }
+  } catch (err) {
+    console.error('Failed to update scheduler:', err);
+  }
+}

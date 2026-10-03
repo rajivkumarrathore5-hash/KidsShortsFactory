@@ -267,6 +267,7 @@ def _run_pipeline_generation(req: GenerateRequest) -> Dict[str, Any]:
         upload_result = None
         if req.auto_upload:
             upload_result = _accept_video(script, video_path, enable_upload_override=True, settings=settings)
+            _update_upload_schedule_state()
 
         return {
             "success": True,
@@ -279,6 +280,52 @@ def _run_pipeline_generation(req: GenerateRequest) -> Dict[str, Any]:
         }
     finally:
         ensure_server_stopped()
+
+def _update_upload_schedule_state(interval_hours=None):
+    from datetime import timedelta
+    cfg = load_config_state()
+    now = datetime.now()
+    interval = interval_hours or float(cfg.get("upload_interval_hours", 9.0))
+    cfg["last_upload_time"] = now.strftime("%d %b %Y, %I:%M %p")
+    cfg["next_upload_time"] = (now + timedelta(hours=interval)).strftime("%d %b %Y, %I:%M %p")
+    save_config_state(cfg)
+
+class SchedulerRequest(BaseModel):
+    upload_interval_hours: Optional[float] = None
+    scheduler_enabled: Optional[bool] = None
+    next_upload_time: Optional[str] = None
+
+@app.get("/api/scheduler")
+async def get_scheduler_status():
+    from datetime import timedelta
+    cfg = load_config_state()
+    interval = float(cfg.get("upload_interval_hours", 9.0))
+    last_up = cfg.get("last_upload_time", "Not uploaded yet")
+    next_up = cfg.get("next_upload_time")
+    if not next_up or next_up == "Auto (Calculate)":
+        now = datetime.now()
+        next_up = (now + timedelta(hours=interval)).strftime("%d %b %Y, %I:%M %p")
+        cfg["next_upload_time"] = next_up
+        save_config_state(cfg)
+
+    return {
+        "upload_interval_hours": interval,
+        "scheduler_enabled": cfg.get("scheduler_enabled", False),
+        "last_upload_time": last_up,
+        "next_upload_time": next_up,
+    }
+
+@app.post("/api/scheduler")
+async def update_scheduler(req: SchedulerRequest):
+    cfg = load_config_state()
+    if req.upload_interval_hours is not None:
+        cfg["upload_interval_hours"] = req.upload_interval_hours
+    if req.scheduler_enabled is not None:
+        cfg["scheduler_enabled"] = req.scheduler_enabled
+    if req.next_upload_time is not None:
+        cfg["next_upload_time"] = req.next_upload_time
+    save_config_state(cfg)
+    return {"status": "success", "scheduler": cfg}
 
 @app.post("/api/generate")
 async def generate_video(req: GenerateRequest):
@@ -305,6 +352,7 @@ async def upload_video(req: UploadRequest):
                 theme=req.theme,
                 character=req.character,
             )
+            _update_upload_schedule_state()
             return {"success": True, "platform": "youtube", "url": res.get("url") if isinstance(res, dict) else str(res)}
 
         elif req.platform.lower() == "facebook":
@@ -315,6 +363,7 @@ async def upload_video(req: UploadRequest):
                 theme=req.theme,
                 character=req.character,
             )
+            _update_upload_schedule_state()
             return {"success": True, "platform": "facebook", "url": res.get("url") if isinstance(res, dict) else str(res)}
 
         else:
