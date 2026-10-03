@@ -373,11 +373,14 @@ async def upload_video(req: UploadRequest):
         print(f"[ERROR] Upload error: {e}")
         return {"success": False, "error": str(e)}
 
-# Explicit Root Route
+# Explicit Root Route with No-Cache Headers
 @app.get("/")
 @app.get("/index.html")
 async def serve_home():
-    return FileResponse(PROJECT_ROOT / "web" / "index.html")
+    return FileResponse(
+        PROJECT_ROOT / "web" / "index.html",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+    )
 
 # Static File Mounts
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
