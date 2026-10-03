@@ -327,6 +327,13 @@ async function loadInitialData() {
     if (typeof activeConfig.overlay_enabled === 'boolean') {
       document.getElementById('overlay-toggle').checked = activeConfig.overlay_enabled;
     }
+
+    if (activeConfig.caption_style) {
+      const capSelect = document.getElementById('caption-style-select');
+      if (capSelect) {
+        capSelect.value = activeConfig.caption_style;
+      }
+    }
   } catch (err) {
     console.error('Failed to load initial data:', err);
   }
