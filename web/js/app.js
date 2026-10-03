@@ -53,12 +53,42 @@ function setupEventListeners() {
   });
 
   // Ratio Chips
+  const customRatioWrapper = document.getElementById('custom-ratio-wrapper');
+  const customRatioInput = document.getElementById('custom-ratio-input');
+  const ratioActiveLabel = document.getElementById('ratio-active-label');
+
   document.querySelectorAll('[data-ratio]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('[data-ratio]').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
+      const ratio = btn.dataset.ratio;
+
+      if (ratio === 'custom') {
+        if (customRatioWrapper) customRatioWrapper.style.display = 'block';
+        if (customRatioInput) customRatioInput.focus();
+        if (ratioActiveLabel) ratioActiveLabel.textContent = customRatioInput.value.trim() ? `Custom: ${customRatioInput.value.trim()}` : 'Custom Ratio';
+      } else {
+        if (customRatioWrapper) customRatioWrapper.style.display = 'none';
+        const labels = {
+          '9:16': '9:16 (Shorts/Reels)',
+          '10:16': '10:16 (Tall)',
+          '12:16': '12:16 (3:4 Portrait)',
+          '14:16': '14:16 (7:8 Medium)',
+          '16:16': '16:16 (1:1 Square)',
+          '16:9': '16:9 (Landscape)',
+        };
+        if (ratioActiveLabel) ratioActiveLabel.textContent = labels[ratio] || ratio;
+      }
     });
   });
+
+  if (customRatioInput) {
+    customRatioInput.addEventListener('input', (e) => {
+      if (ratioActiveLabel) {
+        ratioActiveLabel.textContent = e.target.value.trim() ? `Custom: ${e.target.value.trim()}` : 'Custom Ratio';
+      }
+    });
+  }
 
   // Voice Speed Slider
   const speedSlider = document.getElementById('voice-speed-slider');
@@ -215,11 +245,24 @@ async function loadInitialData() {
     }
 
     if (activeConfig.aspect_ratio) {
+      const targetRatio = String(activeConfig.aspect_ratio).trim();
+      let matched = false;
       document.querySelectorAll('[data-ratio]').forEach((btn) => {
-        if (btn.dataset.ratio === activeConfig.aspect_ratio) {
+        if (btn.dataset.ratio === targetRatio) {
           btn.click();
+          matched = true;
         }
       });
+      if (!matched && targetRatio) {
+        const customBtn = document.getElementById('ratio-custom');
+        if (customBtn) {
+          customBtn.click();
+          const customInp = document.getElementById('custom-ratio-input');
+          if (customInp) customInp.value = targetRatio;
+          const ratioActiveLabel = document.getElementById('ratio-active-label');
+          if (ratioActiveLabel) ratioActiveLabel.textContent = `Custom: ${targetRatio}`;
+        }
+      }
     }
 
     if (activeConfig.duration_target) {
@@ -261,11 +304,20 @@ async function startGeneration({ autoUpload = false }) {
   // Collect Payload
   const activeModeBtn = document.querySelector('[data-mode].active');
   const activeRatioBtn = document.querySelector('[data-ratio].active');
+  let selectedRatio = '9:16';
+  if (activeRatioBtn) {
+    if (activeRatioBtn.dataset.ratio === 'custom') {
+      const customVal = document.getElementById('custom-ratio-input') ? document.getElementById('custom-ratio-input').value.trim() : '';
+      selectedRatio = customVal || '9:16';
+    } else {
+      selectedRatio = activeRatioBtn.dataset.ratio;
+    }
+  }
 
   const payload = {
     theme: document.getElementById('theme-select').value,
     video_mode: activeModeBtn ? activeModeBtn.dataset.mode : 'auto',
-    aspect_ratio: activeRatioBtn ? activeRatioBtn.dataset.ratio : '9:16',
+    aspect_ratio: selectedRatio,
     duration: document.getElementById('duration-select').value,
     indicf5_speed: parseFloat(document.getElementById('voice-speed-slider').value),
     overlay_enabled: document.getElementById('overlay-toggle').checked,

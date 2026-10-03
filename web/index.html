@@ -71,32 +71,40 @@
         </div>
       </div>
 
-      <!-- Aspect Ratio & Duration Row -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <div class="form-group">
-          <label class="form-label">
-            <span>📱 Aspect Ratio</span>
-          </label>
-          <div class="chip-grid" style="grid-template-columns: 1fr 1fr;">
-            <button class="chip-btn active" data-ratio="9:16" id="ratio-9-16">9:16 (Shorts)</button>
-            <button class="chip-btn" data-ratio="16:9" id="ratio-16-9">16:9 (Video)</button>
-          </div>
+      <!-- Aspect Ratio Selection -->
+      <div class="form-group">
+        <label class="form-label">
+          <span>📱 Aspect Ratio</span>
+          <span id="ratio-active-label" style="font-size:0.75rem; color:#fbbf24; font-weight:600;">9:16 (Shorts)</span>
+        </label>
+        <div class="chip-grid" style="grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap:6px;" id="ratio-chip-container">
+          <button class="chip-btn active" data-ratio="9:16" id="ratio-9-16">9:16</button>
+          <button class="chip-btn" data-ratio="10:16" id="ratio-10-16">10:16</button>
+          <button class="chip-btn" data-ratio="12:16" id="ratio-12-16">12:16</button>
+          <button class="chip-btn" data-ratio="14:16" id="ratio-14-16">14:16</button>
+          <button class="chip-btn" data-ratio="16:16" id="ratio-16-16">16:16 (1:1)</button>
+          <button class="chip-btn" data-ratio="16:9" id="ratio-16-9">16:9</button>
+          <button class="chip-btn" data-ratio="custom" id="ratio-custom">✏️ Custom</button>
         </div>
+        <div id="custom-ratio-wrapper" style="display:none; margin-top:8px;">
+          <input type="text" id="custom-ratio-input" class="form-input" placeholder="e.g. 4:5 or 21:9 or 1:1" style="font-size:0.85rem; padding:8px 12px;">
+        </div>
+      </div>
 
-        <div class="form-group">
-          <label class="form-label" for="duration-select">
-            <span>⏱️ Target Duration</span>
-          </label>
-          <select class="form-select" id="duration-select">
-            <option value="auto">🎲 Auto Dynamic</option>
-            <option value="20">20s (Fast Short)</option>
-            <option value="30">30s (Engaging Short)</option>
-            <option value="45">45s (Detailed Short)</option>
-            <option value="60">60s (Story Mini)</option>
-            <option value="90">90s (Full Story)</option>
-            <option value="120">120s (Epic Story)</option>
-          </select>
-        </div>
+      <!-- Target Duration -->
+      <div class="form-group">
+        <label class="form-label" for="duration-select">
+          <span>⏱️ Target Duration</span>
+        </label>
+        <select class="form-select" id="duration-select">
+          <option value="auto">🎲 Auto Dynamic</option>
+          <option value="20">20s (Fast Short)</option>
+          <option value="30">30s (Engaging Short)</option>
+          <option value="45">45s (Detailed Short)</option>
+          <option value="60">60s (Story Mini)</option>
+          <option value="90">90s (Full Story)</option>
+          <option value="120">120s (Epic Story)</option>
+        </select>
       </div>
 
       <!-- TTS Voice & Speed Controls -->
