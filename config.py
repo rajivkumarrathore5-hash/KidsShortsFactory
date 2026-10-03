@@ -39,29 +39,40 @@ TTS_PROVIDER = "indicf5"
 TTS_PITCH = os.getenv("TTS_PITCH", "+0Hz")
 TTS_RATE = os.getenv("TTS_RATE", "+0%")
 
-INDICF5_REFERENCE_AUDIO = os.getenv(
+def _resolve_path(env_name: str, default_path: Path) -> str:
+	val = os.getenv(env_name)
+	if val:
+		try:
+			p = Path(val)
+			if p.exists():
+				return str(p)
+		except Exception:
+			pass
+	return str(default_path)
+
+INDICF5_REFERENCE_AUDIO = _resolve_path(
 	"INDICF5_REFERENCE_AUDIO",
-	str(BASE_DIR / "input" / "kid_voice.wav"),
+	BASE_DIR / "input" / "kid_voice.wav",
 )
-INDICF5_REFERENCE_TEXT = os.getenv(
+INDICF5_REFERENCE_TEXT = _resolve_path(
 	"INDICF5_REFERENCE_TEXT",
-	str(BASE_DIR / "input" / "kid_voice.txt"),
+	BASE_DIR / "input" / "kid_voice.txt",
 )
 INDICF5_SPEED = float(os.getenv("INDICF5_SPEED", "1.25"))
 INDICF5_SERVER_URL = os.getenv(
 	"INDICF5_SERVER_URL", "http://127.0.0.1:8765"
 )
-INDICF5_SERVER_DIR = os.getenv(
+INDICF5_SERVER_DIR = _resolve_path(
 	"INDICF5_SERVER_DIR",
-	str(BASE_DIR),
+	BASE_DIR,
 )
-INDICF5_SERVER_SCRIPT = os.getenv(
+INDICF5_SERVER_SCRIPT = _resolve_path(
 	"INDICF5_SERVER_SCRIPT",
-	str(BASE_DIR / "indicf5_server.py"),
+	BASE_DIR / "indicf5_server.py",
 )
-INDICF5_SERVER_PYTHON = os.getenv(
+INDICF5_SERVER_PYTHON = _resolve_path(
 	"INDICF5_SERVER_PYTHON",
-	str(Path(sys.executable)),
+	Path(sys.executable),
 )
 INDICF5_AUTO_START = os.getenv("INDICF5_AUTO_START", "true").strip().lower() in {
 	"1", "true", "yes", "on"
