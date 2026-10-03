@@ -319,6 +319,52 @@ async def upload_video(req: UploadRequest):
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 app.mount("/", StaticFiles(directory=str(PROJECT_ROOT / "web"), html=True), name="web")
 
+import subprocess
+import atexit
+import re
+
+tunnel_process = None
+
+def start_cloudflare_tunnel(port=8000):
+    global tunnel_process
+    cf_exe = PROJECT_ROOT / "cloudflared.exe"
+    if not cf_exe.is_file():
+        return None
+
+    try:
+        tunnel_process = subprocess.Popen(
+            [str(cf_exe), "tunnel", "--url", f"http://127.0.0.1:{port}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        atexit.register(stop_cloudflare_tunnel)
+
+        tunnel_url = None
+        start_t = datetime.now()
+        while (datetime.now() - start_t).total_seconds() < 12:
+            line = tunnel_process.stdout.readline()
+            if not line and tunnel_process.poll() is not None:
+                break
+            if "trycloudflare.com" in line:
+                m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
+                if m:
+                    tunnel_url = m.group(0)
+                    break
+        return tunnel_url
+    except Exception:
+        return None
+
+def stop_cloudflare_tunnel():
+    global tunnel_process
+    if tunnel_process and tunnel_process.poll() is None:
+        try:
+            tunnel_process.terminate()
+        except Exception:
+            pass
+
 if __name__ == "__main__":
     import uvicorn
     import socket
@@ -335,10 +381,20 @@ if __name__ == "__main__":
 
     local_ip = get_local_ip()
     port = 8000
-    print("\n" + "=" * 60)
-    print("    [STUDIO] KIDS SHORTS FACTORY STUDIO WEB APP")
-    print(f"    [PC URL]    http://localhost:{port}")
-    print(f"    [PHONE URL] http://{local_ip}:{port}")
-    print("=" * 60 + "\n")
 
-    uvicorn.run("web_server:app", host="0.0.0.0", port=port, reload=False)
+    print("\nStarting Cloudflare Secure Mobile Link (No Firewall Needed)...")
+    mobile_tunnel_url = start_cloudflare_tunnel(port)
+
+    print("\n" + "=" * 65)
+    print("    [STUDIO] KIDS SHORTS FACTORY STUDIO WEB APP")
+    print(f"    [PC URL]     http://localhost:{port}")
+    if mobile_tunnel_url:
+        print(f"    [PHONE URL]  {mobile_tunnel_url}  <-- (OPEN THIS ON MOBILE!)")
+    print(f"    [LOCAL WI-FI] http://{local_ip}:{port}")
+    print("=" * 65 + "\n")
+
+    try:
+        uvicorn.run("web_server:app", host="0.0.0.0", port=port, reload=False)
+    finally:
+        stop_cloudflare_tunnel()
+
