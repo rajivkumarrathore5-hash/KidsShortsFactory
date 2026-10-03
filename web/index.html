@@ -64,7 +64,7 @@
           <span>🎬 Video Mode</span>
           <span id="mode-detail" style="font-size:0.75rem; color:var(--text-muted);">Short vs Story</span>
         </label>
-        <div class="chip-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="chip-grid mode-chip-grid">
           <button class="chip-btn active" data-mode="auto" id="mode-auto">🎲 Auto Rotate</button>
           <button class="chip-btn" data-mode="short" id="mode-short">⚡ Short Mode</button>
           <button class="chip-btn" data-mode="story" id="mode-story">📖 Story Mode</button>
@@ -77,7 +77,7 @@
           <span>📱 Aspect Ratio</span>
           <span id="ratio-active-label" style="font-size:0.75rem; color:#fbbf24; font-weight:600;">9:16 (Shorts)</span>
         </label>
-        <div class="chip-grid" style="grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap:6px;" id="ratio-chip-container">
+        <div class="chip-grid ratio-chip-grid" id="ratio-chip-container">
           <button class="chip-btn active" data-ratio="9:16" id="ratio-9-16">9:16</button>
           <button class="chip-btn" data-ratio="10:16" id="ratio-10-16">10:16</button>
           <button class="chip-btn" data-ratio="12:16" id="ratio-12-16">12:16</button>
@@ -127,7 +127,7 @@
       </div>
 
       <!-- Overlay & Caption Controls -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px;">
+      <div class="overlay-caption-grid">
         <div class="form-group">
           <div class="toggle-group">
             <span style="font-size:0.85rem; font-weight:500; color:var(--text-secondary);">✨ Video Overlay</span>
@@ -163,8 +163,8 @@
       </div>
 
       <!-- Automated Upload Scheduling & Interval Controls -->
-      <div class="scheduler-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 14px; margin-top: 14px; margin-bottom: 14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+      <div class="scheduler-card">
+        <div class="scheduler-header">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:1.1rem;">⏰</span>
             <span style="font-size:0.9rem; font-weight:600; color:#fbbf24;">Auto-Upload Schedule</span>
@@ -178,7 +178,7 @@
             <span>⏳ Upload Interval Gap (Hours)</span>
             <span id="interval-label" style="color:#fbbf24; font-weight:600;">Every 9h</span>
           </label>
-          <div class="chip-grid" style="grid-template-columns: repeat(5, 1fr); gap:6px;" id="interval-chips">
+          <div class="chip-grid interval-chip-grid" id="interval-chips">
             <button class="chip-btn" data-interval="3">3h</button>
             <button class="chip-btn" data-interval="6">6h</button>
             <button class="chip-btn active" data-interval="9">9h</button>
@@ -191,7 +191,7 @@
         </div>
 
         <!-- Timestamps & Manual Editor -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px;">
+        <div class="scheduler-time-grid">
           <div>
             <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">📅 Last Uploaded</div>
             <div id="display-last-upload" style="font-size:0.8rem; font-weight:600; color:#e2e8f0; margin-top:2px;">Not uploaded yet</div>
@@ -203,7 +203,7 @@
         </div>
 
         <!-- Edit Next Upload Time (Custom Time Picker) -->
-        <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+        <div class="scheduler-picker-row">
           <input type="datetime-local" id="custom-next-upload-picker" class="form-input" style="font-size:0.8rem; padding:6px 8px; flex:1;">
           <button class="chip-btn" id="btn-save-schedule" style="background:rgba(56, 189, 248, 0.15); color:#38bdf8; border-color:rgba(56, 189, 248, 0.3); padding:7px 12px; white-space:nowrap; font-size:0.8rem;">
             💾 Save Time
