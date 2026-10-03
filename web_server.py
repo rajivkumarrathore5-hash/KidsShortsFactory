@@ -373,6 +373,12 @@ async def upload_video(req: UploadRequest):
         print(f"[ERROR] Upload error: {e}")
         return {"success": False, "error": str(e)}
 
+# Explicit Root Route
+@app.get("/")
+@app.get("/index.html")
+async def serve_home():
+    return FileResponse(PROJECT_ROOT / "web" / "index.html")
+
 # Static File Mounts
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 app.mount("/", StaticFiles(directory=str(PROJECT_ROOT / "web"), html=True), name="web")
