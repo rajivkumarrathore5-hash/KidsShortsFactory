@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_SECRETS_PATH = Path(__file__).resolve().with_name("secrets.py")
+_SECRETS_PATH = Path(__file__).resolve().with_name("app_secrets.py")
+if not _SECRETS_PATH.is_file():
+	_SECRETS_PATH = Path(__file__).resolve().with_name("secrets.py")
 try:
 	_LOCAL_SECRETS = runpy.run_path(str(_SECRETS_PATH))
 except FileNotFoundError:

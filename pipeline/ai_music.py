@@ -4,7 +4,9 @@ import urllib.parse
 from pathlib import Path
 import requests
 
-from secrets import POLLINATIONS_API_KEY
+from config import get_secret
+
+POLLINATIONS_API_KEY = get_secret("POLLINATIONS_API_KEY", "")
 
 
 def generate_ai_music(prompt, output_path, duration=25):

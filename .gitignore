@@ -1,6 +1,7 @@
 # Secrets and environment variables
 .env
 secrets.py
+app_secrets.py
 client_secret.json
 token.json
 config_state.json

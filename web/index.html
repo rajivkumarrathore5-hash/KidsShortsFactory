@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kids Shorts Factory Studio - AI Video Generator</title>
+  <meta name="description" content="Divine Kids Shorts and Stories Generator Studio powered by AI">
+  <meta name="theme-color" content="#0b0f19">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <img src="/icons/icon-192.png" alt="Kids Shorts Studio Logo" id="app-logo">
+        <div class="logo-text">
+          <h1>Kids Shorts Studio</h1>
+          <span>AI Devotional & Moral Factory</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-pill" id="system-status-pill">
+          <div class="status-dot"></div>
+          <span id="system-status-text">IndicF5 Ready</span>
+        </div>
+        <button class="btn-pwa-install" id="btn-pwa-install">📲 Install App</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <main class="main-layout">
+    
+    <!-- Left Column: Controls & Configuration -->
+    <section class="glass-card" aria-labelledby="creator-settings-heading">
+      <div class="card-title">
+        <h2 id="creator-settings-heading">✨ Video Creator Studio</h2>
+        <span style="font-size:0.75rem; color:var(--accent-gold); font-weight:600;" id="theme-count-badge">83+ Themes Active</span>
+      </div>
+
+      <!-- Theme / Character Selection -->
+      <div class="form-group">
+        <label class="form-label" for="theme-select">
+          <span>🕉️ Bhagwan / Theme Selection</span>
+          <span id="theme-mode-label" style="font-size:0.75rem; color:#38bdf8;">🎲 Random Anti-Repeat</span>
+        </label>
+        <select class="form-select" id="theme-select">
+          <option value="auto">🎲 [Auto Random] Rotate across 83+ Themes</option>
+          <!-- Dynamic populated from API -->
+        </select>
+      </div>
+
+      <!-- Video Mode Selection -->
+      <div class="form-group">
+        <label class="form-label">
+          <span>🎬 Video Mode</span>
+          <span id="mode-detail" style="font-size:0.75rem; color:var(--text-muted);">Short vs Story</span>
+        </label>
+        <div class="chip-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+          <button class="chip-btn active" data-mode="auto" id="mode-auto">🎲 Auto Rotate</button>
+          <button class="chip-btn" data-mode="short" id="mode-short">⚡ Short Mode</button>
+          <button class="chip-btn" data-mode="story" id="mode-story">📖 Story Mode</button>
+        </div>
+      </div>
+
+      <!-- Aspect Ratio & Duration Row -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">
+            <span>📱 Aspect Ratio</span>
+          </label>
+          <div class="chip-grid" style="grid-template-columns: 1fr 1fr;">
+            <button class="chip-btn active" data-ratio="9:16" id="ratio-9-16">9:16 (Shorts)</button>
+            <button class="chip-btn" data-ratio="16:9" id="ratio-16-9">16:9 (Video)</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="duration-select">
+            <span>⏱️ Target Duration</span>
+          </label>
+          <select class="form-select" id="duration-select">
+            <option value="auto">🎲 Auto Dynamic</option>
+            <option value="20">20s (Fast Short)</option>
+            <option value="30">30s (Engaging Short)</option>
+            <option value="45">45s (Detailed Short)</option>
+            <option value="60">60s (Story Mini)</option>
+            <option value="90">90s (Full Story)</option>
+            <option value="120">120s (Epic Story)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TTS Voice & Speed Controls -->
+      <div class="form-group">
+        <div class="form-label">
+          <span>🎙️ Kid Voice Speed</span>
+          <span class="range-val" id="voice-speed-val">1.25x</span>
+        </div>
+        <div class="range-container">
+          <input type="range" class="range-slider" id="voice-speed-slider" min="1.0" max="1.5" step="0.05" value="1.25">
+        </div>
+      </div>
+
+      <!-- Overlay & Caption Controls -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px;">
+        <div class="form-group">
+          <div class="toggle-group">
+            <span style="font-size:0.85rem; font-weight:500; color:var(--text-secondary);">✨ Video Overlay</span>
+            <label class="switch">
+              <input type="checkbox" id="overlay-toggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="range-container" style="margin-top:6px;">
+            <input type="range" class="range-slider" id="overlay-opacity-slider" min="5" max="30" step="1" value="10">
+            <span class="range-val" id="overlay-opacity-val">10%</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="caption-style-select">
+            <span>📝 Caption Style</span>
+          </label>
+          <select class="form-select" id="caption-style-select">
+            <option value="bottom_bold">Bottom Bold (Gold/White)</option>
+            <option value="karaoke">Karaoke Word Highlight</option>
+            <option value="classic">Classic Subtitle</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Main Action Buttons -->
+      <div class="action-grid">
+        <button class="btn-primary btn-full" id="btn-generate-video">
+          <span>🚀 Generate Video</span>
+        </button>
+        <button class="btn-secondary btn-full" id="btn-auto-run-upload" style="border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">
+          <span>⚡ 1-Click Generate & Auto-Upload</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Column: Live Progress, Video Player & Activity -->
+    <section class="glass-card" aria-labelledby="live-preview-heading">
+      <div class="card-title">
+        <h2 id="live-preview-heading">🎬 Live Preview & Pipeline Status</h2>
+        <span id="job-status-badge" style="font-size:0.75rem; color:var(--text-muted);">Idle</span>
+      </div>
+
+      <!-- Animated Step Progress Tracker -->
+      <div class="step-tracker" id="step-tracker">
+        <div class="step-item" id="step-script">
+          <div class="step-circle">1</div>
+          <span>Script AI</span>
+        </div>
+        <div class="step-item" id="step-voice">
+          <div class="step-circle">2</div>
+          <span>Voice AI</span>
+        </div>
+        <div class="step-item" id="step-visuals">
+          <div class="step-circle">3</div>
+          <span>Visuals</span>
+        </div>
+        <div class="step-item" id="step-render">
+          <div class="step-circle">4</div>
+          <span>FFmpeg</span>
+        </div>
+        <div class="step-item" id="step-upload">
+          <div class="step-circle">5</div>
+          <span>Upload</span>
+        </div>
+      </div>
+
+      <!-- Video Player or Placeholder -->
+      <div class="preview-container" id="preview-container">
+        <div class="preview-placeholder" id="preview-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Ready to generate divine video</span>
+          <p style="font-size:0.75rem; opacity:0.7;">Click "Generate Video" to start creation</p>
+        </div>
+        <video class="video-player" id="main-video-player" controls playsinline style="display:none;"></video>
+      </div>
+
+      <!-- 1-Click Upload Action Bar (Visible when video is ready) -->
+      <div class="upload-box" id="upload-box" style="display:none;">
+        <button class="btn-upload-yt" id="btn-upload-youtube">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <span>Upload YouTube</span>
+        </button>
+        <button class="btn-upload-fb" id="btn-upload-facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          <span>Upload Facebook</span>
+        </button>
+      </div>
+
+      <!-- Live Terminal Output Console -->
+      <div class="log-card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.75rem; color:var(--text-muted);">
+          <span>💻 Live Execution Logs</span>
+          <span id="log-status-tag" style="color:#10b981;">Connected</span>
+        </div>
+        <div class="terminal-box" id="terminal-box">[System] Web App Ready. Select settings and tap Generate.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Recent Gallery Section -->
+  <section class="gallery-section" aria-labelledby="recent-gallery-heading">
+    <div class="glass-card">
+      <div class="card-title">
+        <h3 id="recent-gallery-heading" style="font-size:1rem; font-weight:600;">🎞️ Recent Generated Shorts & Stories</h3>
+        <button class="chip-btn" id="btn-refresh-gallery" style="padding:4px 10px; font-size:0.75rem;">🔄 Refresh</button>
+      </div>
+      <div class="gallery-grid" id="gallery-grid">
+        <!-- Dynamically loaded recent video cards -->
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
