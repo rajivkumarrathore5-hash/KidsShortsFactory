@@ -14,16 +14,16 @@ def _llm_generate_text(prompt: str) -> str:
 
 def pick_random_title_language() -> str:
     """
-    FIX 5: Randomly pick title language ('hindi', 'english', 'hinglish').
+    Randomly pick title language ('hindi' or 'hinglish'). Pure English is disabled.
     """
-    chosen = random.choice(["hindi", "english", "hinglish"])
+    chosen = random.choice(["hindi", "hinglish"])
     print(f"[META] Title language: {chosen}")
     return chosen
 
 
 def validate_and_format_title(raw_title: str, character: str = None) -> str:
     """
-    FIX 4: Validate and format title to be strictly <= 100 chars, ensuring #shorts is present.
+    Validate and format title to be strictly <= 100 chars, ensuring #shorts is present.
     Logs: [META] Title length: <N>/100 characters
     """
     title = str(raw_title).strip()
@@ -62,42 +62,43 @@ def generate_youtube_metadata(script_text, theme=None, character=None, title_lan
     """
     Generates refined YouTube Shorts title, description, and tags using the 3-layer LLM fallback chain.
     Supports 'short' and 'story' video modes.
+    Enforces Hindi (Devanagari) or Hinglish (Roman Hindi) with viral hooks.
     """
     chosen_lang = title_language or pick_random_title_language()
+    if chosen_lang not in ("hindi", "hinglish"):
+        chosen_lang = random.choice(["hindi", "hinglish"])
+
     theme_str = theme or "Devotion & Moral"
     char_str = character or "Indian Mythology"
 
     lang_instructions = {
         "hindi": (
-            "Write Title & Description in Hindi (Devanagari script). "
-            "Example Title: 'छोटे कृष्ण की माखन चोरी! 🧈 #shorts #viral #krishna #bhakti'. "
-            "Call-To-Action: '🙏 दैनिक भक्ति और नैतिक कहानियों के लिए सब्सक्राइब करें!'"
-        ),
-        "english": (
-            "Write Title & Description in English. "
-            "Example Title: 'Little Krishna's Butter Stealing Tale! 🧈 #shorts #viral #krishna #bhakti'. "
-            "Call-To-Action: '🙏 Subscribe for daily bhakti & moral stories!'"
+            "Write Title & Description STRICTLY in Hindi (Devanagari script). "
+            "Use viral curiosity hook or question. "
+            "Example Title: 'छोटे कृष्ण की माखन चोरी का अनोखा रहस्य! 🧈 #shorts #viral #krishna #bhakti'. "
+            "Call-To-Action: '🙏 ऐसी ही दिव्य और पावन भक्ति कथाओं के लिए सब्सक्राइब करें!'"
         ),
         "hinglish": (
-            "Write Title & Description in Hinglish (Roman script Hindi). "
-            "Example Title: 'Chote Krishna ki Makhan Chori! 🧈 #shorts #viral #krishna #bhakti'. "
-            "Call-To-Action: '🙏 Daily bhakti & moral stories ke liye subscribe karein!'"
+            "Write Title & Description in Hinglish (Conversational Roman Hindi). "
+            "Use viral curiosity hook or question. "
+            "Example Title: 'Chote Krishna ki Makhan Chori Ka Adbhut Rahasya! 🧈 #shorts #viral #krishna #bhakti'. "
+            "Call-To-Action: '🙏 Daily bhakti aur anokhi kahaniyo ke liye channel ko subscribe karein!'"
         ),
     }
-    selected_lang_rule = lang_instructions.get(chosen_lang, lang_instructions["hinglish"])
+    selected_lang_rule = lang_instructions.get(chosen_lang, lang_instructions["hindi"])
 
     mode_rule = ""
     if video_mode == "story":
         mode_rule = (
             "VIDEO MODE IS 'STORY':\n"
-            "- Title MUST feature the suspenseful story hook / question (e.g. 'Krishna ne Govardhan Parvat Kaise Uthaya? 🏔️ #shorts #viral #krishna').\n"
+            "- Title MUST feature the suspenseful story hook / question (e.g. 'कृष्ण ने गोवर्धन पर्वत कैसे उठाया? 🏔️ #shorts #viral #krishna' or 'Krishna ne Govardhan Parvat Kaise Uthaya? 🏔️ #shorts #viral #krishna').\n"
             "- Description MUST explicitly highlight the moral/spiritual lesson of the story in 2-3 lines before hashtags.\n"
             "- Tags MUST include story narrative keywords (e.g. story, kahani, moral story, spiritual lesson).\n"
         )
 
     prompt = f"""
-You are an expert YouTube Shorts creator for kids devotional and moral stories.
-Generate YouTube Shorts metadata based on the following script:
+You are an expert YouTube Shorts creator for Indian devotional and moral stories.
+Generate highly engaging, trending, viral YouTube Shorts metadata based on the following script:
 
 Script:
 {script_text}
@@ -105,7 +106,11 @@ Script:
 Theme: {theme_str}
 Character: {char_str}
 Video Mode: {video_mode.upper()}
-Target Language: {chosen_lang.upper()}
+Target Language: {chosen_lang.upper()} (ONLY HINDI OR HINGLISH, NO PURE ENGLISH)
+
+CRITICAL RULES:
+- DO NOT write title in English. Use ONLY Hindi (Devanagari) or Hinglish (Roman script Hindi).
+- The title must be viral, exciting, and curiosity-inducing.
 
 LANGUAGE RULES:
 {selected_lang_rule}
@@ -113,13 +118,13 @@ LANGUAGE RULES:
 {mode_rule}
 1. YOUTUBE TITLE RULES:
 - MUST be within 95 characters total.
-- Structure: [Hook/Question] + [Character/Theme] + [1-2 Emojis] + [Hashtags]
+- Structure: [Viral Hook/Question] + [Character/Theme] + [1-2 Emojis] + [Hashtags]
 - Required hashtags: ALWAYS include #shorts and #viral, plus 1-2 theme-specific hashtags (e.g., #krishna, #hanuman, #shiv, #ganesh, #jagannath, #durga, #lakshmi, #ram, #radha)
 - Emojis: Include 1-2 relevant emojis (🙏, 🕉️, 🦚, 🪔, 🐒, 🐘, 🧈, 🏔️, etc.)
 
 2. YOUTUBE DESCRIPTION RULES:
 - Engaging summary of the video story and its moral lesson in {chosen_lang.upper()}.
-- Include a clear call-to-action: "Subscribe for daily bhakti & moral stories!" (or target language equivalent).
+- Include a clear call-to-action in {chosen_lang.upper()}.
 - Include 5-10 hashtags at the END of the description:
   Always: #shorts #viral #bhakti
   Theme-specific: e.g. #krishna #radha #hanuman #shiv #ganesh #durga #lakshmi #ram
@@ -127,7 +132,7 @@ LANGUAGE RULES:
 
 3. YOUTUBE TAGS RULES:
 - Return 10-15 tags as a JSON array of string tags.
-- Include BOTH Hindi (Devanagari script) and English/Hinglish versions (e.g. ["कृष्ण", "krishna", "हनुमान", "hanuman", "भक्ति", "bhakti", "shorts", "viral", "devotional", "hindu gods", "ai bhakti", "3d animation", "moral stories"]).
+- Include BOTH Hindi (Devanagari script) and Hinglish versions (e.g. ["कृष्ण", "krishna", "हनुमान", "hanuman", "भक्ति", "bhakti", "shorts", "viral", "devotional", "hindu gods", "ai bhakti", "3d animation", "moral stories"]).
 - Include generic tags: shorts, viral, devotional, hindu gods, ai bhakti, 3d animation, moral stories, hindi story.
 - Include theme/character-specific tags.
 
@@ -170,12 +175,10 @@ Output ONLY valid JSON.
     if not title or len(str(title).strip()) == 0:
         if chosen_lang == "hindi":
             title = f"✨ बाल {keyword} की पावन कथा 🧈 #shorts #viral #{char_tag} #bhakti"
-        elif chosen_lang == "english":
-            title = f"✨ Divine Tale of Little {keyword} 🧈 #shorts #viral #{char_tag} #bhakti"
         else:
-            title = f"✨ Chote {keyword} Ki Kahani 🧈 #shorts #viral #{char_tag} #bhakti"
+            title = f"✨ Chote {keyword} Ki Adbhut Kahani 🧈 #shorts #viral #{char_tag} #bhakti"
 
-    # FIX 4: Validate and format title length
+    # Validate and format title length
     formatted_title = validate_and_format_title(title, character=character)
 
     # Fallback description if generation failed
