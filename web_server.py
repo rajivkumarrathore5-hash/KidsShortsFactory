@@ -72,6 +72,17 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Thread-safe Log Interceptor that forwards sys.stdout to WebSockets
 class LogBroadcastStream(io.StringIO):
     def __init__(self, original_stdout):
@@ -83,8 +94,19 @@ class LogBroadcastStream(io.StringIO):
         self.loop = loop
 
     def write(self, s):
-        self.original_stdout.write(s)
-        self.original_stdout.flush()
+        try:
+            self.original_stdout.write(s)
+            self.original_stdout.flush()
+        except UnicodeEncodeError:
+            try:
+                clean_s = s.encode("ascii", "replace").decode("ascii")
+                self.original_stdout.write(clean_s)
+                self.original_stdout.flush()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
         if s.strip() and self.loop and not self.loop.is_closed():
             try:
                 asyncio.run_coroutine_threadsafe(manager.broadcast(s.strip()), self.loop)
@@ -92,7 +114,10 @@ class LogBroadcastStream(io.StringIO):
                 pass
 
     def flush(self):
-        self.original_stdout.flush()
+        try:
+            self.original_stdout.flush()
+        except Exception:
+            pass
 
 # Redirect stdout
 log_stream = LogBroadcastStream(sys.stdout)
@@ -311,9 +336,9 @@ if __name__ == "__main__":
     local_ip = get_local_ip()
     port = 8000
     print("\n" + "=" * 60)
-    print("    🚀 KIDS SHORTS FACTORY STUDIO WEB APP")
-    print(f"    🖥️  PC Browser URL:    http://localhost:{port}")
-    print(f"    📱  Phone Browser URL: http://{local_ip}:{port}")
+    print("    [STUDIO] KIDS SHORTS FACTORY STUDIO WEB APP")
+    print(f"    [PC URL]    http://localhost:{port}")
+    print(f"    [PHONE URL] http://{local_ip}:{port}")
     print("=" * 60 + "\n")
 
     uvicorn.run("web_server:app", host="0.0.0.0", port=port, reload=False)
