@@ -154,7 +154,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             await websocket.receive_text()
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, ConnectionResetError, Exception):
+        pass
+    finally:
         manager.disconnect(websocket)
 
 @app.get("/api/config")
@@ -205,71 +207,78 @@ def _run_pipeline_generation(req: GenerateRequest) -> Dict[str, Any]:
         spoken_text,
         get_script_metadata,
     )
+    from pipeline.server_control import ensure_server_started, ensure_server_stopped
 
-    settings = load_config_state()
-    settings["aspect_ratio"] = req.aspect_ratio or "9:16"
-    settings["video_mode"] = req.video_mode or "auto"
-    settings["duration"] = req.duration or "auto"
-    settings["duration_target"] = req.duration or "auto"
-    settings["indicf5_speed"] = req.indicf5_speed or 1.25
-    settings["overlay_enabled"] = req.overlay_enabled
-    settings["overlay_transparency"] = req.overlay_transparency
-    settings["caption_style"] = req.caption_style or "bottom_bold"
+    if not ensure_server_started():
+        raise RuntimeError("Could not start or connect to IndicF5 server.")
 
-    save_config_state(settings)
+    try:
+        settings = load_config_state()
+        settings["aspect_ratio"] = req.aspect_ratio or "9:16"
+        settings["video_mode"] = req.video_mode or "auto"
+        settings["duration"] = req.duration or "auto"
+        settings["duration_target"] = req.duration or "auto"
+        settings["indicf5_speed"] = req.indicf5_speed or 1.25
+        settings["overlay_enabled"] = req.overlay_enabled
+        settings["overlay_transparency"] = req.overlay_transparency
+        settings["caption_style"] = req.caption_style or "bottom_bold"
 
-    resolved_mode = resolve_video_mode(settings.get("video_mode", "auto"))
-    settings["video_mode"] = resolved_mode
+        save_config_state(settings)
 
-    resolved_duration = resolve_duration(
-        settings.get("duration", settings.get("duration_target", "auto")),
-        resolved_mode,
-    )
-    settings["duration"] = resolved_duration
-    settings["duration_target"] = resolved_duration
+        resolved_mode = resolve_video_mode(settings.get("video_mode", "auto"))
+        settings["video_mode"] = resolved_mode
 
-    effects = pick_random_effects()
-    effects["caption_style"] = settings["caption_style"]
-    settings["effects"] = effects
+        resolved_duration = resolve_duration(
+            settings.get("duration", settings.get("duration_target", "auto")),
+            resolved_mode,
+        )
+        settings["duration"] = resolved_duration
+        settings["duration_target"] = resolved_duration
 
-    settings = _merge_settings(settings)
+        effects = pick_random_effects()
+        effects["caption_style"] = settings["caption_style"]
+        settings["effects"] = effects
 
-    char_override = None if req.theme == "auto" else req.theme
+        settings = _merge_settings(settings)
 
-    theme_config = _select_dynamic_job(
-        settings,
-        character_override=char_override,
-        duration_override=settings["duration_target"],
-    )
-    if not theme_config:
-        raise RuntimeError("Theme selection failed.")
+        char_override = None if req.theme == "auto" else req.theme
 
-    selected_voice = _determine_voice_for_theme(theme_config)
-    settings["tts_voice"] = selected_voice
+        theme_config = _select_dynamic_job(
+            settings,
+            character_override=char_override,
+            duration_override=settings["duration_target"],
+        )
+        if not theme_config:
+            raise RuntimeError("Theme selection failed.")
 
-    script = _generate_script(settings)
-    audio_path, boundaries_path, video_path, video_info = _render_video(script, settings)
+        selected_voice = _determine_voice_for_theme(theme_config)
+        settings["tts_voice"] = selected_voice
 
-    video_path_obj = Path(video_path)
-    video_filename = video_path_obj.name
+        script = _generate_script(settings)
+        audio_path, boundaries_path, video_path, video_info = _render_video(script, settings)
 
-    metadata_info = get_script_metadata(script)
-    theme_val = metadata_info.get("theme") or theme_config.get("theme")
-    char_val = metadata_info.get("character") or theme_config.get("character")
+        video_path_obj = Path(video_path)
+        video_filename = video_path_obj.name
 
-    upload_result = None
-    if req.auto_upload:
-        upload_result = _accept_video(script, video_path, enable_upload_override=True, settings=settings)
+        metadata_info = get_script_metadata(script)
+        theme_val = metadata_info.get("theme") or theme_config.get("theme")
+        char_val = metadata_info.get("character") or theme_config.get("character")
 
-    return {
-        "success": True,
-        "video_filename": video_filename,
-        "video_path": str(video_path),
-        "script": spoken_text(script),
-        "theme": theme_val,
-        "character": char_val,
-        "upload_result": upload_result,
-    }
+        upload_result = None
+        if req.auto_upload:
+            upload_result = _accept_video(script, video_path, enable_upload_override=True, settings=settings)
+
+        return {
+            "success": True,
+            "video_filename": video_filename,
+            "video_path": str(video_path),
+            "script": spoken_text(script),
+            "theme": theme_val,
+            "character": char_val,
+            "upload_result": upload_result,
+        }
+    finally:
+        ensure_server_stopped()
 
 @app.post("/api/generate")
 async def generate_video(req: GenerateRequest):

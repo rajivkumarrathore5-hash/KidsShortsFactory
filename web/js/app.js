@@ -392,7 +392,13 @@ async function startGeneration({ autoUpload = false }) {
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    const resText = await res.text();
+    let data;
+    try {
+      data = JSON.parse(resText);
+    } catch (parseErr) {
+      throw new Error(`Server returned HTTP ${res.status}: ${resText.slice(0, 200)}`);
+    }
 
     if (data.success && data.video_path) {
       activeVideoPath = data.video_path;
@@ -423,7 +429,7 @@ async function startGeneration({ autoUpload = false }) {
   } catch (err) {
     jobStatus.textContent = 'Error';
     jobStatus.style.color = '#ef4444';
-    alert(`Connection error: ${err.message}`);
+    alert(`Generation Error: ${err.message}`);
   } finally {
     btnGen.disabled = false;
     btnAuto.disabled = false;
@@ -458,7 +464,14 @@ async function triggerUpload(platform) {
       }),
     });
 
-    const data = await res.json();
+    const resText = await res.text();
+    let data;
+    try {
+      data = JSON.parse(resText);
+    } catch (parseErr) {
+      throw new Error(`Server returned HTTP ${res.status}: ${resText.slice(0, 200)}`);
+    }
+
     if (data.success && data.url) {
       alert(`✅ Upload Successful on ${platform.toUpperCase()}!\nLink: ${data.url}`);
     } else {

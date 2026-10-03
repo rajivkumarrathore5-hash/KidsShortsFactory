@@ -1,21 +1,5 @@
 [
   {
-    "id": "vitthal_wari_yatra",
-    "group": "Vitthal",
-    "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
-    "music_track": "tabla_bhakti.mp3",
-    "duration": null,
-    "selected_at": "2026-10-03T17:31:40"
-  },
-  {
-    "id": "vaishno_devi_trikuta",
-    "group": "Vaishno Devi",
-    "visual_style": "hyperrealistic devotional art, dramatic lighting, detailed vertical composition",
-    "music_track": "tabla_bhakti.mp3",
-    "duration": null,
-    "selected_at": "2026-10-03T17:31:40"
-  },
-  {
     "id": "hanuman_sanjeevani_parvat",
     "group": "Hanuman",
     "visual_style": "traditional Madhubani painting, intricate Indian folk patterns, vertical composition",
@@ -78,5 +62,21 @@
     "music_track": "flute_soft.mp3",
     "duration": 60,
     "selected_at": "2026-10-03T17:34:34"
+  },
+  {
+    "id": "durga_mahishasur_mardini",
+    "group": "Durga",
+    "visual_style": "cinematic devotional art, rich warm light, detailed vertical composition",
+    "music_track": "dhol_energy.mp3",
+    "duration": 15,
+    "selected_at": "2026-10-03T18:50:17"
+  },
+  {
+    "id": "lakshmi_samudra_manthan",
+    "group": "Lakshmi",
+    "visual_style": "hyperrealistic devotional art, dramatic lighting, detailed vertical composition",
+    "music_track": "tabla_bhakti.mp3",
+    "duration": 60,
+    "selected_at": "2026-10-03T18:56:57"
   }
 ]
