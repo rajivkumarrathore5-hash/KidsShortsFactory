@@ -1,4 +1,5 @@
 import os
+import sys
 import runpy
 from pathlib import Path
 from dotenv import load_dotenv
@@ -25,6 +26,8 @@ def get_secret(name, default=""):
 #  SYSTEM CONFIGURATION - KIDS SHORTS FACTORY
 # ================================================================
 
+BASE_DIR = Path(__file__).resolve().parent
+
 # ------ PLATFORMS TO UPLOAD ------
 PLATFORMS = ["youtube", "facebook", "instagram"]
 ENABLE_UPLOAD = os.getenv("ENABLE_UPLOAD", "false").strip().lower() in {
@@ -38,11 +41,11 @@ TTS_RATE = os.getenv("TTS_RATE", "+0%")
 
 INDICF5_REFERENCE_AUDIO = os.getenv(
 	"INDICF5_REFERENCE_AUDIO",
-	r"C:\Users\91757\Downloads\KidsShortsFactory\input\kid_voice.wav",
+	str(BASE_DIR / "input" / "kid_voice.wav"),
 )
 INDICF5_REFERENCE_TEXT = os.getenv(
 	"INDICF5_REFERENCE_TEXT",
-	r"C:\Users\91757\Downloads\KidsShortsFactory\input\kid_voice.txt",
+	str(BASE_DIR / "input" / "kid_voice.txt"),
 )
 INDICF5_SPEED = float(os.getenv("INDICF5_SPEED", "1.25"))
 INDICF5_SERVER_URL = os.getenv(
@@ -50,15 +53,15 @@ INDICF5_SERVER_URL = os.getenv(
 )
 INDICF5_SERVER_DIR = os.getenv(
 	"INDICF5_SERVER_DIR",
-	r"C:\Users\91757\Downloads\movie_explainer_5\indicf5_test",
+	str(BASE_DIR),
 )
 INDICF5_SERVER_SCRIPT = os.getenv(
 	"INDICF5_SERVER_SCRIPT",
-	r"C:\Users\91757\Downloads\movie_explainer_5\indicf5_test\indicf5_server.py",
+	str(BASE_DIR / "indicf5_server.py"),
 )
 INDICF5_SERVER_PYTHON = os.getenv(
 	"INDICF5_SERVER_PYTHON",
-	r"C:\Users\91757\Downloads\movie_explainer_5\indicf5_test\.venv\Scripts\python.exe",
+	str(Path(sys.executable)),
 )
 INDICF5_AUTO_START = os.getenv("INDICF5_AUTO_START", "true").strip().lower() in {
 	"1", "true", "yes", "on"
